@@ -21,8 +21,7 @@
 //    publik mereka tidak selalu konsisten soal nama kode ini.
 // ============================================================
 
-const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // TODO: verifikasi kode ini di akun oilpriceapi kamu
-const CODES = ["BRENT_CRUDE_USD", "DUBAI_CRUDE_USD", MOGAS92_CODE];
+const CODES = ["BRENT_SPOT_USD", "DUBAI_CRUDE_USD", "SINGAPORE_MOGAS_92_USD"];
 
 // Kalibrasi regresi linear ICP = a*Brent + b*Dubai + c, dari 51 bulan data
 // ICP resmi (ESDM, tersitasi) dicocokkan dengan rata-rata bulanan Brent &
