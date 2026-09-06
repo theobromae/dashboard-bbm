@@ -87,7 +87,7 @@ async function main() {
 
   const brent = prices["BRENT_CRUDE_USD"];
   const dubai = prices["DUBAI_CRUDE_USD"];
-  const mogas92 = prices[MOGAS92_CODE];
+  const mogas92 = prices["SINGAPORE_MOGAS_92_USD"];
 
   if (brent == null || dubai == null) {
     throw new Error("Brent/Dubai tidak ditemukan di respons API -- cek nama kode & langganan akun.");
