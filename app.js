@@ -287,7 +287,24 @@ function renderTable(tbodyId, rows) {
     .join("");
 }
 
+function waitForChart(timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    if (typeof Chart !== "undefined") return resolve();
+    const start = Date.now();
+    const iv = setInterval(() => {
+      if (typeof Chart !== "undefined") {
+        clearInterval(iv);
+        resolve();
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(iv);
+        reject(new Error("Chart.js gagal dimuat dari CDN (primer & fallback) setelah 5 detik."));
+      }
+    }, 100);
+  });
+}
+
 async function main() {
+  await waitForChart();
   const res = await fetch("data.json");
   const data = await res.json();
   const apbnData = data.apbn_icp_assumptions || { values: {}, revisions: [] };
@@ -311,4 +328,8 @@ async function main() {
     "Data bulanan sampai: " + data.monthly[data.monthly.length - 1].month;
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  document.getElementById("last-updated").textContent = "Gagal memuat dashboard: " + err.message;
+  document.getElementById("last-updated").style.color = "#e0524a";
+});
