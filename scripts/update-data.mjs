@@ -85,7 +85,7 @@ async function main() {
   const prices = await fetchOilPrices();
   const kurs = await fetchKurs();
 
-  const brent = prices["BRENT_CRUDE_USD"];
+  const brent = prices["BRENT_SPOT_USD"];
   const dubai = prices["DUBAI_CRUDE_USD"];
   const mogas92 = prices["SINGAPORE_MOGAS_92_USD"];
 
