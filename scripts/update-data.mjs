@@ -21,7 +21,10 @@
 //    publik mereka tidak selalu konsisten soal nama kode ini.
 // ============================================================
 
-const CODES = ["BRENT_SPOT_USD", "DUBAI_CRUDE_USD", "SINGAPORE_MOGAS_92_USD"];
+const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // TODO: verifikasi kode ini di akun oilpriceapi kamu
+const BRENT_CODE = "BRENT_SPOT_USD"; // dikonfirmasi dari respons live API
+const DUBAI_CODE = "DUBAI_CRUDE_USD"; // TODO: verifikasi -- tebakan berdasarkan pola BRENT_SPOT_USD, cek daftar lengkap kode dulu
+const CODES = [BRENT_CODE, DUBAI_CODE, MOGAS92_CODE];
 
 // Kalibrasi regresi linear ICP = a*Brent + b*Dubai + c, dari 51 bulan data
 // ICP resmi (ESDM, tersitasi) dicocokkan dengan rata-rata bulanan Brent &
@@ -40,6 +43,7 @@ async function fetchOilPrices() {
   const res = await fetch(url, { headers: { Authorization: `Token ${apiKey}` } });
   if (!res.ok) throw new Error(`oilpriceapi.com gagal: HTTP ${res.status} ${await res.text()}`);
   const json = await res.json();
+  console.log("Respons oilpriceapi.com:", JSON.stringify(json));
 
   // Respons bisa berupa objek tunggal atau array tergantung jumlah kode;
   // normalisasi jadi map { code: price }
@@ -85,9 +89,9 @@ async function main() {
   const prices = await fetchOilPrices();
   const kurs = await fetchKurs();
 
-  const brent = prices["BRENT_SPOT_USD"];
-  const dubai = prices["DUBAI_CRUDE_USD"];
-  const mogas92 = prices["SINGAPORE_MOGAS_92_USD"];
+  const brent = prices[BRENT_CODE];
+  const dubai = prices[DUBAI_CODE];
+  const mogas92 = prices[MOGAS92_CODE];
 
   if (brent == null || dubai == null) {
     throw new Error("Brent/Dubai tidak ditemukan di respons API -- cek nama kode & langganan akun.");
