@@ -52,8 +52,22 @@ main{ max-width:1180px; margin:0 auto; padding:20px 24px 60px; }
 .comp .bar > div{ height:100%; border-radius:4px; }
 
 .chart-card{ margin-bottom:22px; }
-canvas{ width:100% !important; }
+.chart-wrap{ position:relative; width:100%; height:340px; }
+@media (max-width:640px){
+  .chart-wrap{ height:240px; }
+  .card{ padding:14px 14px; border-radius:12px; }
+  header{ padding:16px 16px 6px; }
+  header h1{ font-size:18px; }
+  .score-row{ gap:10px; }
+  .light{ width:52px; height:52px; font-size:16px; }
+  .components{ grid-template-columns:1fr; }
+  main{ padding:14px 14px 40px; }
+  table{ font-size:11.5px; }
+  th,td{ padding:5px 5px; }
+}
+canvas{ width:100% !important; height:100% !important; }
 
+.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
 table{ width:100%; border-collapse:collapse; font-size:13px; }
 th,td{ text-align:right; padding:7px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
 th:first-child,td:first-child{ text-align:left; }

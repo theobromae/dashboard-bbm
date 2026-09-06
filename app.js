@@ -244,13 +244,14 @@ function renderChart(canvasId, rows, label, color) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { labels: { color: "#e8ecf5", boxWidth: 14, font: { size: 11 } } },
         tooltip: { mode: "index", intersect: false },
       },
       scales: {
-        x: { ticks: { color: "#93a0b8", maxTicksLimit: 14 }, grid: { color: "#2a3348" } },
+        x: { ticks: { color: "#93a0b8", maxTicksLimit: window.innerWidth < 640 ? 6 : 14 }, grid: { color: "#2a3348" } },
         y: {
           position: "left",
           ticks: { color: "#93a0b8", callback: (v) => "Rp" + v.toLocaleString("id-ID") },

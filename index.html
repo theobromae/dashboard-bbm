@@ -22,29 +22,29 @@
   <div class="card chart-card">
     <h2>Pertamax (RON 92) — Aktual vs Keekonomian vs ICP</h2>
     <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
-    <canvas id="chart-pertamax" height="110"></canvas>
+    <div class="chart-wrap"><canvas id="chart-pertamax" role="img" aria-label="Grafik Pertamax aktual vs keekonomian vs ICP"></canvas></div>
   </div>
 
   <div class="card chart-card">
     <h2>Pertamax Turbo (RON 98) — Aktual vs Keekonomian vs ICP</h2>
     <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
-    <canvas id="chart-turbo" height="110"></canvas>
+    <div class="chart-wrap"><canvas id="chart-turbo" role="img" aria-label="Grafik Pertamax Turbo aktual vs keekonomian vs ICP"></canvas></div>
   </div>
 
   <div class="grid2">
     <div class="card">
       <h2>Riwayat 12 Bulan — Pertamax</h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Bulan</th><th>Aktual</th><th>Keekonomian</th><th>Gap%</th><th>Durasi</th><th>Skor</th><th>Status</th></tr></thead>
         <tbody id="table-pertamax"></tbody>
-      </table>
+      </table></div>
     </div>
     <div class="card">
       <h2>Riwayat 12 Bulan — Pertamax Turbo</h2>
-      <table>
+      <div class="table-scroll"><table>
         <thead><tr><th>Bulan</th><th>Aktual</th><th>Keekonomian</th><th>Gap%</th><th>Durasi</th><th>Skor</th><th>Status</th></tr></thead>
         <tbody id="table-turbo"></tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 
