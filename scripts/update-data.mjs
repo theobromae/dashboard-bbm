@@ -21,9 +21,9 @@
 //    publik mereka tidak selalu konsisten soal nama kode ini.
 // ============================================================
 
-const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // TODO: verifikasi kode ini di akun oilpriceapi kamu
+const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // dikonfirmasi dari respons live API
 const BRENT_CODE = "BRENT_SPOT_USD"; // dikonfirmasi dari respons live API
-const DUBAI_CODE = "DUBAI_CRUDE_USD"; // TODO: verifikasi -- tebakan berdasarkan pola BRENT_SPOT_USD, cek daftar lengkap kode dulu
+const DUBAI_CODE = "DUBAI_CRUDE_USD"; // dikonfirmasi dari respons live API
 const CODES = [BRENT_CODE, DUBAI_CODE, MOGAS92_CODE];
 
 // Kalibrasi regresi linear ICP = a*Brent + b*Dubai + c, dari 51 bulan data
@@ -45,14 +45,16 @@ async function fetchOilPrices() {
   const json = await res.json();
   console.log("Respons oilpriceapi.com:", JSON.stringify(json));
 
-  // Respons bisa berupa objek tunggal atau array tergantung jumlah kode;
-  // normalisasi jadi map { code: price }
-  const list = Array.isArray(json.data) ? json.data : [json.data];
+  // Struktur nyata: { status, data: { prices: [...], missing: [...], metadata } }
+  // (bukan array/objek langsung di bawah "data" seperti dugaan awal)
+  const list = json.data?.prices ?? (Array.isArray(json.data) ? json.data : [json.data]);
   const prices = {};
+  const meta = {};
   for (const item of list) {
     prices[item.code] = item.price;
+    meta[item.code] = item;
   }
-  return prices;
+  return { prices, meta };
 }
 
 async function fetchKurs() {
@@ -86,15 +88,30 @@ async function main() {
   const dataPath = new URL("../data.json", import.meta.url);
   const data = JSON.parse(await fs.readFile(dataPath, "utf-8"));
 
-  const prices = await fetchOilPrices();
+  const { prices, meta } = await fetchOilPrices();
   const kurs = await fetchKurs();
 
   const brent = prices[BRENT_CODE];
   const dubai = prices[DUBAI_CODE];
   const mogas92 = prices[MOGAS92_CODE];
+  const mogas92Meta = meta[MOGAS92_CODE];
 
   if (brent == null || dubai == null) {
     throw new Error("Brent/Dubai tidak ditemukan di respons API -- cek nama kode & langganan akun.");
+  }
+
+  // Mogas92 dari oilpriceapi adalah kontrak calendar-month average swap yang
+  // kadang stale/tidak wajar (pernah dapat $214/barel saat status "stale").
+  // Hanya pakai sebagai MOPS langsung kalau data_status="current" DAN dalam
+  // rentang harga wajar (di bawah 2x Brent, penyaring sanity check kasar).
+  const mogas92Usable =
+    mogas92 != null &&
+    mogas92Meta?.data_status === "current" &&
+    mogas92 < brent * 2;
+  if (mogas92 != null && !mogas92Usable) {
+    console.warn(
+      `Mogas92 diabaikan (data_status=${mogas92Meta?.data_status}, harga=${mogas92}) -- pakai fallback ICP+crack untuk bulan ini.`
+    );
   }
 
   const icpEstimate = ICP_MODEL.a * brent + ICP_MODEL.b * dubai + ICP_MODEL.c;
@@ -119,14 +136,16 @@ async function main() {
 
   row.icp = Math.round(icpEstimate * 100) / 100;
   row.kurs = Math.round(kurs);
-  if (mogas92 != null) {
+  if (mogas92Usable) {
     row.mogas92_live = Math.round(mogas92 * 100) / 100; // dipakai app.js sbg MOPS RON92 langsung, prioritas di atas ICP+crack
+  } else {
+    delete row.mogas92_live; // pastikan tidak ada nilai basi/aneh yang nyangkut dari run sebelumnya
   }
   row.updated_via = "oilpriceapi+frankfurter";
   row.updated_at = now.toISOString();
 
   await fs.writeFile(dataPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
-  console.log(`Updated ${monthKey}: ICP~${row.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${row.kurs}, mogas92_live=${row.mogas92_live ?? "n/a"}`);
+  console.log(`Updated ${monthKey}: ICP~${row.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${row.kurs}, mogas92_live=${row.mogas92_live ?? "n/a (fallback ke ICP+crack)"}`);
 }
 
 main().catch((err) => {
