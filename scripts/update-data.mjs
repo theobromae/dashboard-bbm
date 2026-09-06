@@ -53,13 +53,29 @@ async function fetchOilPrices() {
 }
 
 async function fetchKurs() {
-  // Frankfurter.dev provider=BI: kurs USD/IDR bersumber LANGSUNG dari Bank Indonesia
-  // (bukan kurs pasar generik) -- sesuai dengan definisi "kurs tengah Bank Indonesia"
-  // yang dipakai formula Kepmen ESDM. Gratis, tanpa API key.
-  const res = await fetch("https://api.frankfurter.dev/v2/rate/USD/IDR?providers=BI");
-  if (!res.ok) throw new Error(`Frankfurter (provider BI) gagal: HTTP ${res.status}`);
-  const json = await res.json();
-  return json.rates.IDR;
+  // Coba dulu provider Bank Indonesia (lebih otoritatif, sesuai definisi
+  // formula Kepmen ESDM). Kalau bentuk responsnya tidak seperti yang
+  // diharapkan, fallback ke endpoint Frankfurter standar (basis ECB).
+  try {
+    const res = await fetch("https://api.frankfurter.dev/v2/rate/USD/IDR?providers=BI");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    console.log("Respons Frankfurter (provider BI):", JSON.stringify(json));
+    const val = json?.rates?.IDR ?? json?.rate ?? json?.IDR ?? json?.data?.rates?.IDR;
+    if (typeof val === "number") return val;
+    throw new Error("Struktur respons tidak dikenali");
+  } catch (err) {
+    console.warn(`Provider BI gagal (${err.message}), fallback ke Frankfurter standar (ECB)...`);
+  }
+
+  const res2 = await fetch("https://api.frankfurter.app/latest?from=USD&to=IDR");
+  if (!res2.ok) throw new Error(`Frankfurter fallback gagal: HTTP ${res2.status}`);
+  const json2 = await res2.json();
+  console.log("Respons Frankfurter (fallback ECB):", JSON.stringify(json2));
+  if (typeof json2?.rates?.IDR !== "number") {
+    throw new Error(`Tidak bisa membaca kurs dari respons manapun: ${JSON.stringify(json2)}`);
+  }
+  return json2.rates.IDR;
 }
 
 async function main() {
