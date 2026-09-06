@@ -1,0 +1,729 @@
+{
+  "generated_note": "ICP & kurs bulan-bulan di antara anchor yang diketahui adalah hasil interpolasi linear untuk keperluan visualisasi tren -- bukan angka resmi presisi. Harga aktual mengikuti tanggal perubahan resmi Pertamina (DKI Jakarta/Jawa).",
+  "regime_constants": {
+    "note": "Konstanta formula Kepmen ESDM per rezim (Rp/liter, sebelum margin)",
+    "pre_2020_01": {
+      "ron92": 2542,
+      "ron98": 3178,
+      "desc": "Kepmen 19 K/10/MEM/2019 (batas atas)"
+    },
+    "2020_01_to_2020_02": {
+      "ron92": 1000,
+      "ron98": 1200,
+      "desc": "Kepmen 187 K/10/MEM/2019"
+    },
+    "post_2020_03": {
+      "ron92": 1800,
+      "ron98": 2000,
+      "desc": "Kepmen 62 K/12/MEM/2020"
+    }
+  },
+  "apbn_icp_assumptions": {
+    "note": "Asumsi ICP awal per UU APBN, plus revisi tengah tahun (2020 & 2022) via Perpres. Sumber: riset APBN 2019-2026.",
+    "values": {
+      "2019": 70,
+      "2020": 63,
+      "2021": 45,
+      "2022": 63,
+      "2023": 90,
+      "2024": 82,
+      "2025": 82,
+      "2026": 70
+    },
+    "revisions": [
+      {
+        "effective_month": "2020-04",
+        "value": 38,
+        "note": "Perpres 54/2020 (COVID-19)"
+      },
+      {
+        "effective_month": "2020-06",
+        "value": 33,
+        "note": "Perpres 72/2020 (COVID-19)"
+      },
+      {
+        "effective_month": "2022-06",
+        "value": 100,
+        "note": "Perpres 98/2022 (perang Rusia-Ukraina)"
+      }
+    ]
+  },
+  "monthly": [
+    {
+      "month": "2019-01",
+      "icp": 56.55,
+      "kurs": 14177.0,
+      "pertamax_actual": 10400,
+      "turbo_actual": 12250
+    },
+    {
+      "month": "2019-02",
+      "icp": 61.31,
+      "kurs": 14024.0,
+      "pertamax_actual": 10200,
+      "turbo_actual": 12000
+    },
+    {
+      "month": "2019-03",
+      "icp": 63.6,
+      "kurs": 14183.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-04",
+      "icp": 68.31,
+      "kurs": 14134.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-05",
+      "icp": 68.07,
+      "kurs": 14368.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-06",
+      "icp": 61.0,
+      "kurs": 14239.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-07",
+      "icp": 61.32,
+      "kurs": 14035.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-08",
+      "icp": 57.27,
+      "kurs": 14221.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-09",
+      "icp": 60.84,
+      "kurs": 14096.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-10",
+      "icp": 59.82,
+      "kurs": 14117.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-11",
+      "icp": 63.26,
+      "kurs": 14056.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2019-12",
+      "icp": 67.18,
+      "kurs": 14008.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 11200
+    },
+    {
+      "month": "2020-01",
+      "icp": 65.38,
+      "kurs": 13732.0,
+      "pertamax_actual": 9850,
+      "turbo_actual": 9900
+    },
+    {
+      "month": "2020-02",
+      "icp": 56.51,
+      "kurs": 13754.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-03",
+      "icp": 34.23,
+      "kurs": 15175.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-04",
+      "icp": 20.66,
+      "kurs": 15805.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-05",
+      "icp": 25.67,
+      "kurs": 14865.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-06",
+      "icp": 36.68,
+      "kurs": 14163.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-07",
+      "icp": 40.64,
+      "kurs": 14546.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-08",
+      "icp": 41.63,
+      "kurs": 14704.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-09",
+      "icp": 37.43,
+      "kurs": 14820.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-10",
+      "icp": 38.07,
+      "kurs": 14728.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-11",
+      "icp": 40.67,
+      "kurs": 14236.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2020-12",
+      "icp": 47.78,
+      "kurs": 14134.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-01",
+      "icp": 53.17,
+      "kurs": 14043.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-02",
+      "icp": 60.36,
+      "kurs": 14045.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-03",
+      "icp": 63.5,
+      "kurs": 14389.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-04",
+      "icp": 61.96,
+      "kurs": 14543.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-05",
+      "icp": 65.49,
+      "kurs": 14314.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-06",
+      "icp": 70.23,
+      "kurs": 14338.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-07",
+      "icp": 72.17,
+      "kurs": 14503.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-08",
+      "icp": 67.8,
+      "kurs": 14398.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-09",
+      "icp": 72.2,
+      "kurs": 14255.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 9850
+    },
+    {
+      "month": "2021-10",
+      "icp": 81.8,
+      "kurs": 14192.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2021-11",
+      "icp": 80.13,
+      "kurs": 14271.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2021-12",
+      "icp": 73.36,
+      "kurs": 14334.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-01",
+      "icp": 84.54,
+      "kurs": 14396.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-02",
+      "icp": 95.72,
+      "kurs": 14459.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-03",
+      "icp": 113.5,
+      "kurs": 14515.0,
+      "pertamax_actual": 9000,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-04",
+      "icp": 109.58,
+      "kurs": 14577.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-05",
+      "icp": 105.79,
+      "kurs": 14638.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-06",
+      "icp": 101.88,
+      "kurs": 14700.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-07",
+      "icp": 98.09,
+      "kurs": 14741.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 12300
+    },
+    {
+      "month": "2022-08",
+      "icp": 94.17,
+      "kurs": 14783.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 17900
+    },
+    {
+      "month": "2022-09",
+      "icp": 86.07,
+      "kurs": 14826.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 15900,
+      "mogas92_live": 89.64
+    },
+    {
+      "month": "2022-10",
+      "icp": 82.97,
+      "kurs": 14867.0,
+      "pertamax_actual": 13900,
+      "turbo_actual": 14950,
+      "mogas92_live": 82.95
+    },
+    {
+      "month": "2022-11",
+      "icp": 79.76,
+      "kurs": 14909.0,
+      "pertamax_actual": 13900,
+      "turbo_actual": 14950,
+      "mogas92_live": 83.29
+    },
+    {
+      "month": "2022-12",
+      "icp": 76.66,
+      "kurs": 14950.0,
+      "pertamax_actual": 13900,
+      "turbo_actual": 14950,
+      "mogas92_live": 85.05
+    },
+    {
+      "month": "2023-01",
+      "icp": 75.32,
+      "kurs": 14976.0,
+      "pertamax_actual": 13900,
+      "turbo_actual": 14950,
+      "mogas92_live": 89.38
+    },
+    {
+      "month": "2023-02",
+      "icp": 73.97,
+      "kurs": 15001.0,
+      "pertamax_actual": 12800,
+      "turbo_actual": 14050,
+      "mogas92_live": 88.42
+    },
+    {
+      "month": "2023-03",
+      "icp": 72.76,
+      "kurs": 15024.0,
+      "pertamax_actual": 12800,
+      "turbo_actual": 15100,
+      "mogas92_live": 87.94
+    },
+    {
+      "month": "2023-04",
+      "icp": 71.42,
+      "kurs": 15050.0,
+      "pertamax_actual": 13300,
+      "turbo_actual": 15100,
+      "mogas92_live": 85.56
+    },
+    {
+      "month": "2023-05",
+      "icp": 70.12,
+      "kurs": 15074.0,
+      "pertamax_actual": 13300,
+      "turbo_actual": 15100,
+      "mogas92_live": 80.27
+    },
+    {
+      "month": "2023-06",
+      "icp": 75.17,
+      "kurs": 15100.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 15100,
+      "mogas92_live": 88.19
+    },
+    {
+      "month": "2023-07",
+      "icp": 80.06,
+      "kurs": 15146.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 15100,
+      "mogas92_live": 91.86
+    },
+    {
+      "month": "2023-08",
+      "icp": 85.12,
+      "kurs": 15193.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 15100,
+      "mogas92_live": 99.37
+    },
+    {
+      "month": "2023-09",
+      "icp": 90.17,
+      "kurs": 15241.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 15100,
+      "mogas92_live": 102.63
+    },
+    {
+      "month": "2023-10",
+      "icp": 86.72,
+      "kurs": 15287.0,
+      "pertamax_actual": 14000,
+      "turbo_actual": 16600,
+      "mogas92_live": 90.36
+    },
+    {
+      "month": "2023-11",
+      "icp": 82.77,
+      "kurs": 15334.0,
+      "pertamax_actual": 14000,
+      "turbo_actual": 16600,
+      "mogas92_live": 91.22
+    },
+    {
+      "month": "2023-12",
+      "icp": 78.95,
+      "kurs": 15380.0,
+      "pertamax_actual": 13350,
+      "turbo_actual": 16600,
+      "mogas92_live": 88.82
+    },
+    {
+      "month": "2024-01",
+      "icp": 75.0,
+      "kurs": 15426.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 86.21
+    },
+    {
+      "month": "2024-02",
+      "icp": 75.51,
+      "kurs": 15471.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 90.66
+    },
+    {
+      "month": "2024-03",
+      "icp": 75.99,
+      "kurs": 15514.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 88.59
+    },
+    {
+      "month": "2024-04",
+      "icp": 76.5,
+      "kurs": 15560.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 89.4
+    },
+    {
+      "month": "2024-05",
+      "icp": 76.99,
+      "kurs": 15604.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 85.63
+    },
+    {
+      "month": "2024-06",
+      "icp": 77.5,
+      "kurs": 15650.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 83.04
+    },
+    {
+      "month": "2024-07",
+      "icp": 78.0,
+      "kurs": 15716.0,
+      "pertamax_actual": 12950,
+      "turbo_actual": 14400,
+      "mogas92_live": 85.95
+    },
+    {
+      "month": "2024-08",
+      "icp": 78.51,
+      "kurs": 15783.0,
+      "pertamax_actual": 13700,
+      "turbo_actual": 14400,
+      "mogas92_live": 86.41
+    },
+    {
+      "month": "2024-09",
+      "icp": 76.86,
+      "kurs": 15851.0,
+      "pertamax_actual": 13700,
+      "turbo_actual": 14400
+    },
+    {
+      "month": "2024-10",
+      "icp": 75.25,
+      "kurs": 15917.0,
+      "pertamax_actual": 12100,
+      "turbo_actual": 13250
+    },
+    {
+      "month": "2024-11",
+      "icp": 73.6,
+      "kurs": 15984.0,
+      "pertamax_actual": 12100,
+      "turbo_actual": 13250
+    },
+    {
+      "month": "2024-12",
+      "icp": 72.0,
+      "kurs": 16050.0,
+      "pertamax_actual": 12100,
+      "turbo_actual": 13250
+    },
+    {
+      "month": "2025-01",
+      "icp": 65.0,
+      "kurs": 16101.0,
+      "pertamax_actual": 12100,
+      "turbo_actual": 13250
+    },
+    {
+      "month": "2025-02",
+      "icp": 64.42,
+      "kurs": 16152.0,
+      "pertamax_actual": 12900,
+      "turbo_actual": 14000
+    },
+    {
+      "month": "2025-03",
+      "icp": 63.89,
+      "kurs": 16198.0,
+      "pertamax_actual": 12900,
+      "turbo_actual": 14000
+    },
+    {
+      "month": "2025-04",
+      "icp": 63.31,
+      "kurs": 16249.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 14000
+    },
+    {
+      "month": "2025-05",
+      "icp": 62.75,
+      "kurs": 16299.0,
+      "pertamax_actual": 12400,
+      "turbo_actual": 14000
+    },
+    {
+      "month": "2025-06",
+      "icp": 62.79,
+      "kurs": 16350.0,
+      "pertamax_actual": 12100,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-07",
+      "icp": 62.82,
+      "kurs": 16399.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-08",
+      "icp": 62.86,
+      "kurs": 16450.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-09",
+      "icp": 62.89,
+      "kurs": 16501.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-10",
+      "icp": 62.93,
+      "kurs": 16550.0,
+      "pertamax_actual": 12500,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-11",
+      "icp": 62.96,
+      "kurs": 16601.0,
+      "pertamax_actual": 12200,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2025-12",
+      "icp": 63.0,
+      "kurs": 16650.0,
+      "pertamax_actual": 12750,
+      "turbo_actual": 13050
+    },
+    {
+      "month": "2026-01",
+      "icp": 64.41,
+      "kurs": 16800.0,
+      "pertamax_actual": 12350,
+      "turbo_actual": 13400
+    },
+    {
+      "month": "2026-02",
+      "icp": 68.79,
+      "kurs": 17069.0,
+      "pertamax_actual": 11800,
+      "turbo_actual": 12700
+    },
+    {
+      "month": "2026-03",
+      "icp": 102.26,
+      "kurs": 17312.0,
+      "pertamax_actual": 12300,
+      "turbo_actual": 12700
+    },
+    {
+      "month": "2026-04",
+      "icp": 117.31,
+      "kurs": 17581.0,
+      "pertamax_actual": 12300,
+      "turbo_actual": 12700
+    },
+    {
+      "month": "2026-05",
+      "icp": 106.56,
+      "kurs": 17841.0,
+      "pertamax_actual": 12300,
+      "turbo_actual": 19400
+    },
+    {
+      "month": "2026-06",
+      "icp": 83.45,
+      "kurs": 18110.0,
+      "pertamax_actual": 12300,
+      "turbo_actual": 20750,
+      "mogas92_live": 106.88
+    },
+    {
+      "month": "2026-07",
+      "icp": 81.68,
+      "kurs": 18071.0,
+      "pertamax_actual": 16250,
+      "turbo_actual": 19300
+    },
+    {
+      "month": "2026-08",
+      "icp": 80.84,
+      "kurs": 17935.0,
+      "pertamax_actual": 15950,
+      "turbo_actual": 18300
+    },
+    {
+      "month": "2026-09",
+      "icp": 80.0,
+      "kurs": 17800.0,
+      "pertamax_actual": 15950,
+      "turbo_actual": 19600
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peringatan Dini Harga Pertamax &amp; Pertamax Turbo</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>🚦 Peringatan Dini Harga Pertamax &amp; Pertamax Turbo</h1>
+  <p>Skor gabungan gap harga keekonomian, durasi tertahan, momentum ICP/kurs, dan deviasi asumsi ICP APBN.</p>
+  <div class="updated" id="last-updated">Memuat data...</div>
+</header>
+
+<main>
+  <div class="grid2">
+    <div class="card" id="card-pertamax"></div>
+    <div class="card" id="card-turbo"></div>
+  </div>
+
+  <div class="card chart-card">
+    <h2>Pertamax (RON 92) — Aktual vs Keekonomian vs ICP</h2>
+    <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
+    <canvas id="chart-pertamax" height="110"></canvas>
+  </div>
+
+  <div class="card chart-card">
+    <h2>Pertamax Turbo (RON 98) — Aktual vs Keekonomian vs ICP</h2>
+    <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
+    <canvas id="chart-turbo" height="110"></canvas>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Riwayat 12 Bulan — Pertamax</h2>
+      <table>
+        <thead><tr><th>Bulan</th><th>Aktual</th><th>Keekonomian</th><th>Gap%</th><th>Durasi</th><th>Skor</th><th>Status</th></tr></thead>
+        <tbody id="table-pertamax"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Riwayat 12 Bulan — Pertamax Turbo</h2>
+      <table>
+        <thead><tr><th>Bulan</th><th>Aktual</th><th>Keekonomian</th><th>Gap%</th><th>Durasi</th><th>Skor</th><th>Status</th></tr></thead>
+        <tbody id="table-turbo"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Cara Kerja &amp; Cara Update</h2>
+    <div class="footnote">
+      <b>Skor gabungan (0-100)</b> dihitung dengan bobot BERBEDA per produk, hasil kalibrasi backtest terhadap 93 bulan data historis (2019-2026), memakai crack spread aktual (RON92=10,32; RON98=17,02 US$/barel dari data historis):<br/>
+      &bull; <b>Pertamax</b> lebih dipengaruhi diskresi politik (gap bisa dibiarkan besar berbulan-bulan) &rarr; bobot Durasi Tertahan dinaikkan (45%), ambang gap lebih tinggi (35%). Backtest: recall 50%, presisi <b>100%</b> (0 false positive dari 4 bulan merah).<br/>
+      &bull; <b>Pertamax Turbo</b> lebih "taat formula" (jarang ditahan lama) &rarr; bobot Gap+Durasi digabung lebih besar (40%/40%), ambang skor merah lebih rendah (55). Backtest: recall 75%, presisi 80%.<br/>
+      🟢 Hijau &middot; 🟡 Kuning &middot; 🔴 Merah (ambang beda per produk — lihat <code>WEIGHTS</code> di <code>app.js</code>).<br/><br/>
+      <b>Catatan jujur:</b> backtest ini hanya berdasarkan 4 kejadian kenaikan besar per produk sepanjang 2019-2026 — sample kecil, jadi angka recall/presisi di atas indikatif, bukan jaminan statistik. Kalibrasi ulang dianjurkan begitu ada lebih banyak data.<br/><br/>
+      <b>Update bulanan:</b> edit <code>data.json</code>, tambahkan satu baris bulan berjalan (ICP dari rilis Kementerian ESDM, kurs dari BI, harga aktual dari pengumuman resmi Pertamina), lalu commit &amp; push ke GitHub — halaman ini otomatis terbarui.<br/>
+      <b>Harga keekonomian</b> adalah ESTIMASI hasil formula Kepmen ESDM (MOPS = ICP + crack spread rata-rata historis + konstanta rezim + margin 10% + PPN/PBBKB ~15%), bukan angka resmi Pertamina — gunakan untuk melihat tren &amp; gap, bukan sebagai angka presisi mutlak.
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
