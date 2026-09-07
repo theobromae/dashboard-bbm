@@ -720,12 +720,13 @@
     },
     {
       "month": "2026-09",
-      "icp": 96.93,
-      "kurs": 17689,
+      "icp": 96.51,
+      "kurs": 17636,
       "pertamax_actual": 15950,
       "turbo_actual": 19600,
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-09-06T23:25:59.973Z"
+      "updated_at": "2026-09-07T23:55:14.694Z",
+      "mogas92_live": 122.8
     }
   ]
 }
