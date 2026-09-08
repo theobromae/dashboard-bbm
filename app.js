@@ -347,14 +347,20 @@ function renderChart(canvasId, rows, label, color) {
   }
   if (!rows.length) return; // wilayah ini belum ada data sama sekali
   const ctx = document.getElementById(canvasId).getContext("2d");
+  const labels = rows.map((r) => r.month || r.date);
+  // Sumbu-X pakai INDEX numerik (bukan kategori teks) -- chartjs-plugin-zoom
+  // hanya mendukung pan yang benar2 mulus pada skala numerik/waktu, bukan
+  // skala kategori (label teks berbaris). Tanggal aslinya tetap ditampilkan
+  // lewat callback tick & tooltip di bawah.
+  const toXY = (getter) => rows.map((r, i) => ({ x: i, y: getter(r) }));
+
   chartInstances[canvasId] = new Chart(ctx, {
     type: "line",
     data: {
-      labels: rows.map((r) => r.month || r.date),
       datasets: [
         {
           label: `${label} - Aktual`,
-          data: rows.map((r) => r.actual),
+          data: toXY((r) => r.actual),
           borderColor: color,
           borderWidth: 3,
           pointRadius: 0,
@@ -363,7 +369,7 @@ function renderChart(canvasId, rows, label, color) {
         },
         {
           label: `${label} - Keekonomian (estimasi)`,
-          data: rows.map((r) => r.eco),
+          data: toXY((r) => r.eco),
           borderColor: "#e0a72b",
           borderDash: [6, 4],
           borderWidth: 2.5,
@@ -373,7 +379,7 @@ function renderChart(canvasId, rows, label, color) {
         },
         {
           label: "ICP (US$/barel)",
-          data: rows.map((r) => r.icp),
+          data: toXY((r) => r.icp),
           borderColor: "#5b9bd5aa",
           borderWidth: 1.2,
           pointRadius: 0,
@@ -388,7 +394,11 @@ function renderChart(canvasId, rows, label, color) {
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { labels: { color: "#e8ecf5", boxWidth: 14, font: { size: 11 } } },
-        tooltip: { mode: "index", intersect: false },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+          callbacks: { title: (items) => labels[items[0].parsed.x] ?? "" },
+        },
         zoom: {
           pan: { enabled: true, mode: "x" },
           zoom: {
@@ -396,14 +406,19 @@ function renderChart(canvasId, rows, label, color) {
             pinch: { enabled: true },
             mode: "x",
           },
-          limits: { x: { minRange: 5 } },
+          limits: { x: { min: 0, max: labels.length - 1, minRange: 5 } },
         },
       },
       scales: {
         x: {
-          type: "category",
-          offset: true,
-          ticks: { color: "#93a0b8", maxTicksLimit: window.innerWidth < 640 ? 6 : 14 },
+          type: "linear",
+          min: 0,
+          max: labels.length - 1,
+          ticks: {
+            color: "#93a0b8",
+            maxTicksLimit: window.innerWidth < 640 ? 6 : 14,
+            callback: (value) => labels[Math.round(value)] ?? "",
+          },
           grid: { color: "#2a3348" },
         },
         y: {
