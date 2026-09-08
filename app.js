@@ -85,6 +85,14 @@ function apbnAssumptionFor(monthStr, apbnData) {
   return apbnData && apbnData.values ? apbnData.values[year] : undefined;
 }
 
+// Baca harga aktual dengan dukungan 2 format: angka biasa (lama, selalu
+// dianggap data Jakarta) ATAU objek per-wilayah { jakarta, sumut } (baru).
+function readActual(raw, region) {
+  if (raw == null) return null;
+  if (typeof raw === "number") return region === "jakarta" ? raw : null;
+  return raw[region] ?? null;
+}
+
 // ============================================================
 // TIMELINE HARIAN/MINGGUAN -- dibangun dari price_changes (tanggal presisi)
 // + daily (ICP/kurs harian, mulai terkumpul sejak fitur ini aktif) dengan
