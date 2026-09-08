@@ -155,9 +155,8 @@ function buildDailyTimeline(data, product, region) {
   return days.map((date) => {
     const actual = getActualForDate(data, product, region, date);
     const { icp, kurs, mogas92_live } = getIcpKursForDate(data, date, dailyMap);
-    const eco = icp != null && kurs != null ? hargaKeekonomian(icp, kurs, date.slice(0, 7), product, mogas92_live) : null;
-    return { date, actual, icp, kurs, eco };
-  }).filter((r) => r.actual != null);
+    return { date, actual, icp, kurs, mogas92_live };
+  }).filter((r) => r.actual != null && r.icp != null && r.kurs != null);
 }
 
 function isoWeekKey(dateStr) {
@@ -175,63 +174,62 @@ function resampleWeekly(daily) {
     buckets.get(wk).push(r);
   }
   return [...buckets.entries()].map(([weekStart, items]) => {
-    const valid = items.filter((i) => i.icp != null);
-    const avgIcp = valid.length ? valid.reduce((s, i) => s + i.icp, 0) / valid.length : null;
-    const avgKurs = valid.length ? valid.reduce((s, i) => s + i.kurs, 0) / valid.length : null;
+    const avgIcp = items.reduce((s, i) => s + i.icp, 0) / items.length;
+    const avgKurs = items.reduce((s, i) => s + i.kurs, 0) / items.length;
     const last = items[items.length - 1];
-    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, eco: last.eco };
+    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, mogas92_live: last.mogas92_live, isEstimated: last.isEstimated };
   });
 }
 
-function getTimelineForResolution(data, product, region, resolution) {
+function getTimelineForResolution(data, product, region, resolution, apbnData) {
+  if (resolution === "bulanan") return null; // pakai jalur computeSeries yang sudah ada
   const daily = buildDailyTimeline(data, product, region);
-  if (resolution === "harian") return daily;
-  if (resolution === "mingguan") return resampleWeekly(daily);
-  return null; // "bulanan" pakai jalur computeSeries yang sudah ada
+  const raw = resolution === "harian" ? daily : resampleWeekly(daily);
+  return scoreSeries(raw, product, apbnData, resolution);
 }
 
-function computeSeries(monthly, product, apbnData, region) {
+// Berapa "periode" setara 1 bulan kalender, dipakai utk menyesuaikan skala
+// waktu durasi & momentum supaya artinya tetap sama (dlm bulan riil) di
+// resolusi manapun -- durasi "4 bulan" pada resolusi harian = ~122 hari,
+// BUKAN 4 hari.
+const PERIODS_PER_MONTH = { bulanan: 1, mingguan: 4.345, harian: 30.44 };
+
+// Hitung gap/durasi/momentum/skor pada deret {icp,kurs,actual,mogas92_live,
+// month|date} apapun resolusinya. Dipakai baik utk tampilan bulanan (skor
+// resmi dashboard) maupun mingguan/harian (skor turut disesuaikan skala waktu).
+function scoreSeries(baseRows, product, apbnData, resolution) {
   const W = WEIGHTS[product];
-  // Hanya proses bulan yang punya data harga untuk wilayah yang dipilih --
-  // wilayah selain Jakarta bisa jadi belum ada histori sama sekali.
-  const filtered = monthly.filter((r) => {
-    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
-    return readActual(raw, region) != null;
-  });
-  const rows = filtered.map((r) => {
-    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
-    const actual = readActual(raw, region);
-    const eco = hargaKeekonomian(r.icp, r.kurs, r.month, product, r.mogas92_live);
-    const gapPct = ((eco - actual) / actual) * 100;
-    const estKey = product === "ron92" ? "pertamax" : "turbo";
-    const isEstimated = region !== "jakarta" && !!r.sumut_estimated?.[estKey];
-    return { month: r.month, icp: r.icp, kurs: r.kurs, actual, eco, gapPct, isEstimated };
+  const ppm = PERIODS_PER_MONTH[resolution] || 1;
+  const durationMaxPeriods = Math.max(1, W.durationMaxMonths * ppm);
+  const momLookback = Math.max(1, Math.round(3 * ppm));
+
+  const rows = baseRows.map((r) => {
+    const key = r.month || r.date;
+    const eco = hargaKeekonomian(r.icp, r.kurs, key.slice(0, 7), product, r.mogas92_live);
+    const gapPct = ((eco - r.actual) / r.actual) * 100;
+    return { ...r, eco, gapPct };
   });
 
-  // durasi: berapa bulan berturut-turut gapPct > threshold (threshold beda per produk)
   let duration = 0;
   for (let i = 0; i < rows.length; i++) {
-    if (rows[i].gapPct > W.gapThresholdPct) duration += 1;
-    else duration = 0;
+    duration = rows[i].gapPct > W.gapThresholdPct ? duration + 1 : 0;
     rows[i].duration = duration;
   }
 
-  // momentum ICP & kurs (3 bulan)
   for (let i = 0; i < rows.length; i++) {
-    const j = Math.max(0, i - 3);
-    rows[i].icpMom3 = ((rows[i].icp - rows[j].icp) / rows[j].icp) * 100;
-    rows[i].kursMom3 = ((rows[i].kurs - rows[j].kurs) / rows[j].kurs) * 100;
+    const j = Math.max(0, i - momLookback);
+    rows[i].icpMom3 = rows[j].icp ? ((rows[i].icp - rows[j].icp) / rows[j].icp) * 100 : 0;
+    rows[i].kursMom3 = rows[j].kurs ? ((rows[i].kurs - rows[j].kurs) / rows[j].kurs) * 100 : 0;
   }
 
-  // skor komponen + skor gabungan
   for (const row of rows) {
-    const apbnAssumption = apbnAssumptionFor(row.month, apbnData);
+    const monthKey = (row.month || row.date).slice(0, 7);
+    const apbnAssumption = apbnAssumptionFor(monthKey, apbnData);
 
     const gapScore = clamp((row.gapPct / W.gapMaxPct) * 100, 0, 100);
-    const durationScore = clamp((row.duration / W.durationMaxMonths) * 100, 0, 100);
+    const durationScore = clamp((row.duration / durationMaxPeriods) * 100, 0, 100);
     const momentumScore = clamp(
-      ((Math.max(0, row.icpMom3) / W.icpMom3MaxPct) * 60 +
-        (Math.max(0, row.kursMom3) / W.kursMom3MaxPct) * 40),
+      (Math.max(0, row.icpMom3) / W.icpMom3MaxPct) * 60 + (Math.max(0, row.kursMom3) / W.kursMom3MaxPct) * 40,
       0, 100
     );
     let apbnScore = 0, hasApbn = false, apbnDevPct = 0;
@@ -243,17 +241,10 @@ function computeSeries(monthly, product, apbnData, region) {
 
     let composite;
     if (hasApbn) {
-      composite =
-        W.gap * gapScore +
-        W.duration * durationScore +
-        W.momentum * momentumScore +
-        W.apbn * apbnScore;
+      composite = W.gap * gapScore + W.duration * durationScore + W.momentum * momentumScore + W.apbn * apbnScore;
     } else {
       const wSum = W.gap + W.duration + W.momentum;
-      composite =
-        (W.gap * gapScore +
-          W.duration * durationScore +
-          W.momentum * momentumScore) / wSum;
+      composite = (W.gap * gapScore + W.duration * durationScore + W.momentum * momentumScore) / wSum;
     }
 
     row.gapScore = gapScore;
@@ -267,6 +258,22 @@ function computeSeries(monthly, product, apbnData, region) {
     row.light = composite >= W.redAt ? "red" : composite >= W.amberAt ? "amber" : "green";
   }
   return rows;
+}
+
+function computeSeries(monthly, product, apbnData, region) {
+  // Skor bulanan resmi (kartu skor peringatan dini) -- TIDAK berubah.
+  const filtered = monthly.filter((r) => {
+    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
+    return readActual(raw, region) != null;
+  });
+  const estKey = product === "ron92" ? "pertamax" : "turbo";
+  const baseRows = filtered.map((r) => {
+    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
+    const actual = readActual(raw, region);
+    const isEstimated = region !== "jakarta" && !!r.sumut_estimated?.[estKey];
+    return { month: r.month, icp: r.icp, kurs: r.kurs, mogas92_live: r.mogas92_live, actual, isEstimated };
+  });
+  return scoreSeries(baseRows, product, apbnData, "bulanan");
 }
 
 function lightLabel(light) {
@@ -383,18 +390,22 @@ function renderChart(canvasId, rows, label, color) {
         legend: { labels: { color: "#e8ecf5", boxWidth: 14, font: { size: 11 } } },
         tooltip: { mode: "index", intersect: false },
         zoom: {
-          pan: { enabled: true, mode: "x", modifierKey: null },
+          pan: { enabled: true, mode: "x" },
           zoom: {
-            wheel: { enabled: true },
+            wheel: { enabled: true, speed: 0.08 },
             pinch: { enabled: true },
-            drag: { enabled: false },
             mode: "x",
           },
-          limits: { x: { minRange: 10 } },
+          limits: { x: { minRange: 5 } },
         },
       },
       scales: {
-        x: { ticks: { color: "#93a0b8", maxTicksLimit: window.innerWidth < 640 ? 6 : 14 }, grid: { color: "#2a3348" } },
+        x: {
+          type: "category",
+          offset: true,
+          ticks: { color: "#93a0b8", maxTicksLimit: window.innerWidth < 640 ? 6 : 14 },
+          grid: { color: "#2a3348" },
+        },
         y: {
           position: "left",
           ticks: { color: "#93a0b8", callback: (v) => "Rp" + v.toLocaleString("id-ID") },
@@ -471,15 +482,15 @@ function renderAll(region, resolution) {
   renderScoreCard("card-pertamax", `Pertamax (RON 92) — ${regionLabel}`, last92);
   renderScoreCard("card-turbo", `Pertamax Turbo (RON 98) — ${regionLabel}`, last98);
 
-  const ron92Display = currentResolution === "bulanan" ? ron92Monthly : getTimelineForResolution(data, "ron92", region, currentResolution);
-  const ron98Display = currentResolution === "bulanan" ? ron98Monthly : getTimelineForResolution(data, "ron98", region, currentResolution);
+  const ron92Display = currentResolution === "bulanan" ? ron92Monthly : getTimelineForResolution(data, "ron92", region, currentResolution, apbnData);
+  const ron98Display = currentResolution === "bulanan" ? ron98Monthly : getTimelineForResolution(data, "ron98", region, currentResolution, apbnData);
 
   renderChart("chart-pertamax", ron92Display, "Pertamax", "#e0524a");
   renderChart("chart-turbo", ron98Display, "Pertamax Turbo", "#e0524a");
 
-  const showAll = currentResolution !== "bulanan";
-  renderTable("table-pertamax", ron92Display, showAll);
-  renderTable("table-turbo", ron98Display, showAll);
+  lastRows.ron92 = ron92Display;
+  lastRows.ron98 = ron98Display;
+  refreshTables();
 
   const resLabel = { bulanan: "Bulanan", mingguan: "Mingguan", harian: "Harian" }[currentResolution];
   document.getElementById("last-updated").textContent =
@@ -638,6 +649,46 @@ function setupUpdateForm() {
   });
 }
 
+let lastRows = { ron92: [], ron98: [] };
+
+function getDateFilterRange() {
+  const from = document.getElementById("filter-from")?.value || "";
+  const to = document.getElementById("filter-to")?.value || "";
+  return { from, to };
+}
+
+function applyDateFilter(rows) {
+  const { from, to } = getDateFilterRange();
+  if (!from && !to) return null; // tidak ada filter aktif -> pakai default (last 12 / semua)
+  return rows.filter((r) => {
+    const key = r.month ? r.month + "-01" : r.date;
+    if (from && key < from) return false;
+    if (to && key > to) return false;
+    return true;
+  });
+}
+
+function refreshTables() {
+  const filtered92 = applyDateFilter(lastRows.ron92);
+  const filtered98 = applyDateFilter(lastRows.ron98);
+  renderTable("table-pertamax", filtered92 ?? lastRows.ron92, filtered92 != null || currentResolution !== "bulanan");
+  renderTable("table-turbo", filtered98 ?? lastRows.ron98, filtered98 != null || currentResolution !== "bulanan");
+}
+
+function setupDateFilter() {
+  const from = document.getElementById("filter-from");
+  const to = document.getElementById("filter-to");
+  const resetBtn = document.getElementById("filter-reset");
+  if (!from || !to) return;
+  from.addEventListener("change", refreshTables);
+  to.addEventListener("change", refreshTables);
+  resetBtn?.addEventListener("click", () => {
+    from.value = "";
+    to.value = "";
+    refreshTables();
+  });
+}
+
 async function main() {
   await waitForChart();
   const res = await fetch("data.json");
@@ -645,6 +696,7 @@ async function main() {
 
   setupRegionSwitch();
   setupUpdateForm();
+  setupDateFilter();
   renderAll("jakarta", "bulanan");
 }
 

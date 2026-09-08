@@ -71,13 +71,13 @@ main{ max-width:1180px; margin:0 auto; padding:20px 24px 60px; }
   table{ font-size:11.5px; }
   th,td{ padding:5px 5px; }
 }
-canvas{ width:100% !important; height:100% !important; }
+canvas{ width:100% !important; height:100% !important; touch-action:none; }
 
-.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table-scroll{ overflow-x:auto; overflow-y:auto; max-height:420px; -webkit-overflow-scrolling:touch; }
 table{ width:100%; border-collapse:collapse; font-size:13px; }
 th,td{ text-align:right; padding:7px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
 th:first-child,td:first-child{ text-align:left; }
-thead th{ color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; }
+thead th{ color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; position:sticky; top:0; background:var(--panel); }
 tbody tr:hover{ background:rgba(255,255,255,0.03); }
 .badge{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
 .badge.green{ background:rgba(62,207,142,0.18); color:var(--green); }
@@ -90,7 +90,24 @@ tbody tr:hover{ background:rgba(255,255,255,0.03); }
 .footnote code{ background:var(--panel2); padding:1px 5px; border-radius:4px; }
 .footnote a{ color:var(--blue); }
 
+.chart-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.chart-head h2{ margin:0 0 4px; }
 .region-switch{ display:inline-flex; gap:6px; margin-top:12px; background:var(--panel2); padding:4px; border-radius:10px; }
+.reset-zoom-btn{
+  background:var(--panel2); border:1px solid var(--border); color:var(--muted);
+  padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; white-space:nowrap; flex:0 0 auto;
+}
+.reset-zoom-btn:hover{ color:var(--text); border-color:var(--blue); }
+.res-btn{
+  background:transparent; border:none; color:var(--muted); padding:7px 14px; border-radius:7px;
+  font-size:13px; font-weight:500; cursor:pointer; transition:background .15s,color .15s;
+}
+.res-btn:hover{ color:var(--text); }
+.res-btn.active{ background:var(--green); color:#042015; }
+@media (max-width:640px){
+  .chart-head{ flex-direction:column; }
+  .reset-zoom-btn{ align-self:flex-end; }
+}
 .region-btn{
   background:transparent; border:none; color:var(--muted); padding:7px 14px; border-radius:7px;
   font-size:13px; font-weight:500; cursor:pointer; transition:background .15s,color .15s;
@@ -98,6 +115,17 @@ tbody tr:hover{ background:rgba(255,255,255,0.03); }
 .region-btn:hover{ color:var(--text); }
 .region-btn.active{ background:var(--blue); color:#fff; }
 
+.filter-row{ display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+.filter-row label{ display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted); }
+.filter-row input{
+  background:var(--panel2); border:1px solid var(--border); color:var(--text);
+  padding:8px 10px; border-radius:8px; font-size:13.5px;
+}
+.filter-row button{
+  background:var(--panel2); border:1px solid var(--border); color:var(--muted);
+  padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer;
+}
+.filter-row button:hover{ color:var(--text); border-color:var(--blue); }
 .update-form{ display:flex; flex-direction:column; gap:10px; max-width:480px; }
 .update-form label{ display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted); flex:1; }
 .update-form input, .update-form select{
