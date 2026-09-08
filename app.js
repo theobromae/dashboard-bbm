@@ -106,7 +106,9 @@ function computeSeries(monthly, product, apbnData, region) {
     const actual = readActual(raw, region);
     const eco = hargaKeekonomian(r.icp, r.kurs, r.month, product, r.mogas92_live);
     const gapPct = ((eco - actual) / actual) * 100;
-    return { month: r.month, icp: r.icp, kurs: r.kurs, actual, eco, gapPct };
+    const estKey = product === "ron92" ? "pertamax" : "turbo";
+    const isEstimated = region !== "jakarta" && !!r.sumut_estimated?.[estKey];
+    return { month: r.month, icp: r.icp, kurs: r.kurs, actual, eco, gapPct, isEstimated };
   });
 
   // durasi: berapa bulan berturut-turut gapPct > threshold (threshold beda per produk)
@@ -198,6 +200,7 @@ function renderScoreCard(containerId, label, row) {
   }
   el.innerHTML = `
     <h2>${label}</h2>
+    <div class="current-price">${fmtRp(row.actual)}<span class="unit">/liter</span>${row.isEstimated ? '<span class="est-badge">estimasi</span>' : ''}</div>
     <div class="sub">Bulan acuan: ${row.month}</div>
     <div class="score-row">
       <div class="light ${row.light}">${Math.round(row.composite)}</div>
@@ -314,7 +317,7 @@ function renderTable(tbodyId, rows) {
       (r) => `
     <tr>
       <td>${r.month}</td>
-      <td>${fmtRp(r.actual)}</td>
+      <td>${fmtRp(r.actual)}${r.isEstimated ? " *" : ""}</td>
       <td>${fmtRp(r.eco)}</td>
       <td>${fmtPct(r.gapPct)}</td>
       <td>${r.duration}</td>
@@ -427,6 +430,10 @@ async function commitPriceUpdate({ token, product, region, month, price }) {
     row[field] = { jakarta: null, sumut: null };
   }
   row[field][region] = price;
+  if (region !== "jakarta" && row.sumut_estimated) {
+    const estKey = product === "ron92" ? "pertamax" : "turbo";
+    delete row.sumut_estimated[estKey];
+  }
 
   // 4. Commit balik ke GitHub
   const newContentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2) + "\n")));

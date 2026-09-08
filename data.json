@@ -53,680 +53,1520 @@
       "month": "2019-01",
       "icp": 56.55,
       "kurs": 14177,
-      "pertamax_actual": 10400,
-      "turbo_actual": 12250
+      "pertamax_actual": {
+        "jakarta": 10400,
+        "sumut": 10400
+      },
+      "turbo_actual": {
+        "jakarta": 12250,
+        "sumut": 12250
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-02",
       "icp": 61.31,
       "kurs": 14024,
-      "pertamax_actual": 10200,
-      "turbo_actual": 12000
+      "pertamax_actual": {
+        "jakarta": 10200,
+        "sumut": 10200
+      },
+      "turbo_actual": {
+        "jakarta": 12000,
+        "sumut": 12000
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-03",
       "icp": 63.6,
       "kurs": 14183,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-04",
       "icp": 68.31,
       "kurs": 14134,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-05",
       "icp": 68.07,
       "kurs": 14368,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-06",
       "icp": 61,
       "kurs": 14239,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-07",
       "icp": 61.32,
       "kurs": 14035,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-08",
       "icp": 57.27,
       "kurs": 14221,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-09",
       "icp": 60.84,
       "kurs": 14096,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-10",
       "icp": 59.82,
       "kurs": 14117,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-11",
       "icp": 63.26,
       "kurs": 14056,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2019-12",
       "icp": 67.18,
       "kurs": 14008,
-      "pertamax_actual": 9850,
-      "turbo_actual": 11200
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 11200,
+        "sumut": 11200
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-01",
       "icp": 65.38,
       "kurs": 13732,
-      "pertamax_actual": 9850,
-      "turbo_actual": 9900
+      "pertamax_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "turbo_actual": {
+        "jakarta": 9900,
+        "sumut": 9900
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-02",
       "icp": 56.51,
       "kurs": 13754,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-03",
       "icp": 34.23,
       "kurs": 15175,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-04",
       "icp": 20.66,
       "kurs": 15805,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-05",
       "icp": 25.67,
       "kurs": 14865,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-06",
       "icp": 36.68,
       "kurs": 14163,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-07",
       "icp": 40.64,
       "kurs": 14546,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-08",
       "icp": 41.63,
       "kurs": 14704,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-09",
       "icp": 37.43,
       "kurs": 14820,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-10",
       "icp": 38.07,
       "kurs": 14728,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-11",
       "icp": 40.67,
       "kurs": 14236,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2020-12",
       "icp": 47.78,
       "kurs": 14134,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-01",
       "icp": 53.17,
       "kurs": 14043,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-02",
       "icp": 60.36,
       "kurs": 14045,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-03",
       "icp": 63.5,
       "kurs": 14389,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9000
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 9850
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-04",
       "icp": 61.96,
       "kurs": 14543,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9200
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 10050
+      }
     },
     {
       "month": "2021-05",
       "icp": 65.49,
       "kurs": 14314,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 10086
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-06",
       "icp": 70.23,
       "kurs": 14338,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 10086
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-07",
       "icp": 72.17,
       "kurs": 14503,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 10086
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-08",
       "icp": 67.8,
       "kurs": 14398,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 10086
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-09",
       "icp": 72.2,
       "kurs": 14255,
-      "pertamax_actual": 9000,
-      "turbo_actual": 9850
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 9850,
+        "sumut": 12500
+      },
+      "sumut_estimated": {
+        "pertamax": true
+      }
     },
     {
       "month": "2021-10",
       "icp": 81.8,
       "kurs": 14192,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-11",
       "icp": 80.13,
       "kurs": 14271,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2021-12",
       "icp": 73.36,
       "kurs": 14334,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-01",
       "icp": 84.54,
       "kurs": 14396,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-02",
       "icp": 95.72,
       "kurs": 14459,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-03",
       "icp": 113.5,
       "kurs": 14515,
-      "pertamax_actual": 9000,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 9000,
+        "sumut": 9216
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-04",
       "icp": 109.58,
       "kurs": 14577,
-      "pertamax_actual": 12500,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12750
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "turbo": true
+      }
     },
     {
       "month": "2022-05",
       "icp": 105.79,
       "kurs": 14638,
-      "pertamax_actual": 12500,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-06",
       "icp": 101.88,
       "kurs": 14700,
-      "pertamax_actual": 12500,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-07",
       "icp": 98.09,
       "kurs": 14741,
-      "pertamax_actual": 12500,
-      "turbo_actual": 12300
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-08",
       "icp": 94.17,
       "kurs": 14783,
-      "pertamax_actual": 12500,
-      "turbo_actual": 17900
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 17900,
+        "sumut": 18250
+      },
+      "sumut_estimated": {
+        "pertamax": true
+      }
     },
     {
       "month": "2022-09",
       "icp": 86.07,
       "kurs": 14826,
-      "pertamax_actual": 12500,
-      "turbo_actual": 15900,
-      "mogas92_live": 89.64
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 15900,
+        "sumut": 16250
+      },
+      "mogas92_live": 89.64,
+      "sumut_estimated": {
+        "pertamax": true
+      }
     },
     {
       "month": "2022-10",
       "icp": 82.97,
       "kurs": 14867,
-      "pertamax_actual": 13900,
-      "turbo_actual": 14950,
-      "mogas92_live": 82.95
+      "pertamax_actual": {
+        "jakarta": 13900,
+        "sumut": 14234
+      },
+      "turbo_actual": {
+        "jakarta": 14950,
+        "sumut": 15309
+      },
+      "mogas92_live": 82.95,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-11",
       "icp": 79.76,
       "kurs": 14909,
-      "pertamax_actual": 13900,
-      "turbo_actual": 14950,
-      "mogas92_live": 83.29
+      "pertamax_actual": {
+        "jakarta": 13900,
+        "sumut": 14234
+      },
+      "turbo_actual": {
+        "jakarta": 14950,
+        "sumut": 15309
+      },
+      "mogas92_live": 83.29,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2022-12",
       "icp": 76.66,
       "kurs": 14950,
-      "pertamax_actual": 13900,
-      "turbo_actual": 14950,
+      "pertamax_actual": {
+        "jakarta": 13900,
+        "sumut": 14200
+      },
+      "turbo_actual": {
+        "jakarta": 14950,
+        "sumut": 15500
+      },
       "mogas92_live": 85.05
     },
     {
       "month": "2023-01",
       "icp": 75.32,
       "kurs": 14976,
-      "pertamax_actual": 13900,
-      "turbo_actual": 14950,
+      "pertamax_actual": {
+        "jakarta": 13900,
+        "sumut": 13050
+      },
+      "turbo_actual": {
+        "jakarta": 14950,
+        "sumut": 14350
+      },
       "mogas92_live": 89.38
     },
     {
       "month": "2023-02",
       "icp": 73.97,
       "kurs": 15001,
-      "pertamax_actual": 12800,
-      "turbo_actual": 14050,
+      "pertamax_actual": {
+        "jakarta": 12800,
+        "sumut": 13050
+      },
+      "turbo_actual": {
+        "jakarta": 14050,
+        "sumut": 15150
+      },
       "mogas92_live": 88.42
     },
     {
       "month": "2023-03",
       "icp": 72.76,
       "kurs": 15024,
-      "pertamax_actual": 12800,
-      "turbo_actual": 15100,
-      "mogas92_live": 87.94
+      "pertamax_actual": {
+        "jakarta": 12800,
+        "sumut": 13107
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 87.94,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-04",
       "icp": 71.42,
       "kurs": 15050,
-      "pertamax_actual": 13300,
-      "turbo_actual": 15100,
-      "mogas92_live": 85.56
+      "pertamax_actual": {
+        "jakarta": 13300,
+        "sumut": 13619
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 85.56,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-05",
       "icp": 70.12,
       "kurs": 15074,
-      "pertamax_actual": 13300,
-      "turbo_actual": 15100,
-      "mogas92_live": 80.27
+      "pertamax_actual": {
+        "jakarta": 13300,
+        "sumut": 13619
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 80.27,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-06",
       "icp": 75.17,
       "kurs": 15100,
-      "pertamax_actual": 12500,
-      "turbo_actual": 15100,
-      "mogas92_live": 88.19
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 88.19,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-07",
       "icp": 80.06,
       "kurs": 15146,
-      "pertamax_actual": 12500,
-      "turbo_actual": 15100,
-      "mogas92_live": 91.86
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 91.86,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-08",
       "icp": 85.12,
       "kurs": 15193,
-      "pertamax_actual": 12500,
-      "turbo_actual": 15100,
-      "mogas92_live": 99.37
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15462
+      },
+      "mogas92_live": 99.37,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-09",
       "icp": 90.17,
       "kurs": 15241,
-      "pertamax_actual": 12500,
-      "turbo_actual": 15100,
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 13950
+      },
+      "turbo_actual": {
+        "jakarta": 15100,
+        "sumut": 15900
+      },
       "mogas92_live": 102.63
     },
     {
       "month": "2023-10",
       "icp": 86.72,
       "kurs": 15287,
-      "pertamax_actual": 14000,
-      "turbo_actual": 16600,
-      "mogas92_live": 90.36
+      "pertamax_actual": {
+        "jakarta": 14000,
+        "sumut": 14560
+      },
+      "turbo_actual": {
+        "jakarta": 16600,
+        "sumut": 17264
+      },
+      "mogas92_live": 90.36,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2023-11",
       "icp": 82.77,
       "kurs": 15334,
-      "pertamax_actual": 14000,
-      "turbo_actual": 16600,
-      "mogas92_live": 91.22
+      "pertamax_actual": {
+        "jakarta": 14000,
+        "sumut": 14560
+      },
+      "turbo_actual": {
+        "jakarta": 16600,
+        "sumut": 15800
+      },
+      "mogas92_live": 91.22,
+      "sumut_estimated": {
+        "pertamax": true
+      }
     },
     {
       "month": "2023-12",
       "icp": 78.95,
       "kurs": 15380,
-      "pertamax_actual": 13350,
-      "turbo_actual": 16600,
+      "pertamax_actual": {
+        "jakarta": 13350,
+        "sumut": 13950
+      },
+      "turbo_actual": {
+        "jakarta": 16600,
+        "sumut": 15700
+      },
       "mogas92_live": 88.82
     },
     {
       "month": "2024-01",
       "icp": 75,
       "kurs": 15426,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13500
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14750
+      },
       "mogas92_live": 86.21
     },
     {
       "month": "2024-02",
       "icp": 75.51,
       "kurs": 15471,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 90.66
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13468
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14976
+      },
+      "mogas92_live": 90.66,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-03",
       "icp": 75.99,
       "kurs": 15514,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 88.59
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13261
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14746
+      },
+      "mogas92_live": 88.59,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-04",
       "icp": 76.5,
       "kurs": 15560,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 89.4
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13261
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14746
+      },
+      "mogas92_live": 89.4,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-05",
       "icp": 76.99,
       "kurs": 15604,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 85.63
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13261
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14746
+      },
+      "mogas92_live": 85.63,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-06",
       "icp": 77.5,
       "kurs": 15650,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 83.04
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13261
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14746
+      },
+      "mogas92_live": 83.04,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-07",
       "icp": 78,
       "kurs": 15716,
-      "pertamax_actual": 12950,
-      "turbo_actual": 14400,
-      "mogas92_live": 85.95
+      "pertamax_actual": {
+        "jakarta": 12950,
+        "sumut": 13261
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14746
+      },
+      "mogas92_live": 85.95,
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2024-08",
       "icp": 78.51,
       "kurs": 15783,
-      "pertamax_actual": 13700,
-      "turbo_actual": 14400,
+      "pertamax_actual": {
+        "jakarta": 13700,
+        "sumut": 14000
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 15800
+      },
       "mogas92_live": 86.41
     },
     {
       "month": "2024-09",
       "icp": 76.86,
       "kurs": 15851,
-      "pertamax_actual": 13700,
-      "turbo_actual": 14400
+      "pertamax_actual": {
+        "jakarta": 13700,
+        "sumut": 13250
+      },
+      "turbo_actual": {
+        "jakarta": 14400,
+        "sumut": 14800
+      }
     },
     {
       "month": "2024-10",
       "icp": 75.25,
       "kurs": 15917,
-      "pertamax_actual": 12100,
-      "turbo_actual": 13250
+      "pertamax_actual": {
+        "jakarta": 12100,
+        "sumut": 12400
+      },
+      "turbo_actual": {
+        "jakarta": 13250,
+        "sumut": 13550
+      }
     },
     {
       "month": "2024-11",
       "icp": 73.6,
       "kurs": 15984,
-      "pertamax_actual": 12100,
-      "turbo_actual": 13250
+      "pertamax_actual": {
+        "jakarta": 12100,
+        "sumut": 12400
+      },
+      "turbo_actual": {
+        "jakarta": 13250,
+        "sumut": 13800
+      }
     },
     {
       "month": "2024-12",
       "icp": 72,
       "kurs": 16050,
-      "pertamax_actual": 12100,
-      "turbo_actual": 13250
+      "pertamax_actual": {
+        "jakarta": 12100,
+        "sumut": 12400
+      },
+      "turbo_actual": {
+        "jakarta": 13250,
+        "sumut": 13850
+      }
     },
     {
       "month": "2025-01",
       "icp": 65,
       "kurs": 16101,
-      "pertamax_actual": 12100,
-      "turbo_actual": 13250
+      "pertamax_actual": {
+        "jakarta": 12100,
+        "sumut": 12390
+      },
+      "turbo_actual": {
+        "jakarta": 13250,
+        "sumut": 13568
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2025-02",
       "icp": 64.42,
       "kurs": 16152,
-      "pertamax_actual": 12900,
-      "turbo_actual": 14000
+      "pertamax_actual": {
+        "jakarta": 12900,
+        "sumut": 12900
+      },
+      "turbo_actual": {
+        "jakarta": 14000,
+        "sumut": 14000
+      }
     },
     {
       "month": "2025-03",
       "icp": 63.89,
       "kurs": 16198,
-      "pertamax_actual": 12900,
-      "turbo_actual": 14000
+      "pertamax_actual": {
+        "jakarta": 12900,
+        "sumut": 13210
+      },
+      "turbo_actual": {
+        "jakarta": 14000,
+        "sumut": 14336
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2025-04",
       "icp": 63.31,
       "kurs": 16249,
-      "pertamax_actual": 12500,
-      "turbo_actual": 14000
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 14000,
+        "sumut": 13800
+      }
     },
     {
       "month": "2025-05",
       "icp": 62.75,
       "kurs": 16299,
-      "pertamax_actual": 12400,
-      "turbo_actual": 14000
+      "pertamax_actual": {
+        "jakarta": 12400,
+        "sumut": 12698
+      },
+      "turbo_actual": {
+        "jakarta": 14000,
+        "sumut": 14336
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2025-06",
       "icp": 62.79,
       "kurs": 16350,
-      "pertamax_actual": 12100,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12100,
+        "sumut": 12390
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13363
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2025-07",
       "icp": 62.82,
       "kurs": 16399,
-      "pertamax_actual": 12500,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12500
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13363
+      },
+      "sumut_estimated": {
+        "turbo": true
+      }
     },
     {
       "month": "2025-08",
       "icp": 62.86,
       "kurs": 16450,
-      "pertamax_actual": 12500,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12500
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13500
+      }
     },
     {
       "month": "2025-09",
       "icp": 62.89,
       "kurs": 16501,
-      "pertamax_actual": 12500,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12800
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13363
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2025-10",
       "icp": 62.93,
       "kurs": 16550,
-      "pertamax_actual": 12500,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12500,
+        "sumut": 12500
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13400
+      }
     },
     {
       "month": "2025-11",
       "icp": 62.96,
       "kurs": 16601,
-      "pertamax_actual": 12200,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12200,
+        "sumut": 12500
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13363
+      },
+      "sumut_estimated": {
+        "turbo": true
+      }
     },
     {
       "month": "2025-12",
       "icp": 63,
       "kurs": 16650,
-      "pertamax_actual": 12750,
-      "turbo_actual": 13050
+      "pertamax_actual": {
+        "jakarta": 12750,
+        "sumut": 13056
+      },
+      "turbo_actual": {
+        "jakarta": 13050,
+        "sumut": 13363
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2026-01",
       "icp": 64.41,
       "kurs": 16800,
-      "pertamax_actual": 12350,
-      "turbo_actual": 13400
+      "pertamax_actual": {
+        "jakarta": 12350,
+        "sumut": 12646
+      },
+      "turbo_actual": {
+        "jakarta": 13400,
+        "sumut": 13722
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2026-02",
       "icp": 68.79,
       "kurs": 17069,
-      "pertamax_actual": 11800,
-      "turbo_actual": 12700
+      "pertamax_actual": {
+        "jakarta": 11800,
+        "sumut": 12600
+      },
+      "turbo_actual": {
+        "jakarta": 12700,
+        "sumut": 12700
+      }
     },
     {
       "month": "2026-03",
       "icp": 102.26,
       "kurs": 17312,
-      "pertamax_actual": 12300,
-      "turbo_actual": 12700
+      "pertamax_actual": {
+        "jakarta": 12300,
+        "sumut": 12600
+      },
+      "turbo_actual": {
+        "jakarta": 12700,
+        "sumut": 13350
+      }
     },
     {
       "month": "2026-04",
       "icp": 117.31,
       "kurs": 17581,
-      "pertamax_actual": 12300,
-      "turbo_actual": 12700
+      "pertamax_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "turbo_actual": {
+        "jakarta": 12700,
+        "sumut": 19850
+      },
+      "sumut_estimated": {
+        "pertamax": true
+      }
     },
     {
       "month": "2026-05",
       "icp": 106.56,
       "kurs": 17841,
-      "pertamax_actual": 12300,
-      "turbo_actual": 19400
+      "pertamax_actual": {
+        "jakarta": 12300,
+        "sumut": 12595
+      },
+      "turbo_actual": {
+        "jakarta": 19400,
+        "sumut": 19866
+      },
+      "sumut_estimated": {
+        "pertamax": true,
+        "turbo": true
+      }
     },
     {
       "month": "2026-06",
       "icp": 83.45,
       "kurs": 18110,
-      "pertamax_actual": 12300,
-      "turbo_actual": 20750,
+      "pertamax_actual": {
+        "jakarta": 12300,
+        "sumut": 16650
+      },
+      "turbo_actual": {
+        "jakarta": 20750,
+        "sumut": 21200
+      },
       "mogas92_live": 106.88
     },
     {
       "month": "2026-07",
       "icp": 81.68,
       "kurs": 18071,
-      "pertamax_actual": 16250,
-      "turbo_actual": 19300
+      "pertamax_actual": {
+        "jakarta": 16250,
+        "sumut": 16650
+      },
+      "turbo_actual": {
+        "jakarta": 19300,
+        "sumut": 19750
+      }
     },
     {
       "month": "2026-08",
       "icp": 80.84,
       "kurs": 17935,
-      "pertamax_actual": 15950,
-      "turbo_actual": 18300
+      "pertamax_actual": {
+        "jakarta": 15950,
+        "sumut": 16300
+      },
+      "turbo_actual": {
+        "jakarta": 18300,
+        "sumut": 18700
+      }
     },
     {
       "month": "2026-09",
       "icp": 96.51,
       "kurs": 17636,
-      "pertamax_actual": 15950,
-      "turbo_actual": 19600,
+      "pertamax_actual": {
+        "jakarta": 15950,
+        "sumut": 16300
+      },
+      "turbo_actual": {
+        "jakarta": 19600,
+        "sumut": 20000
+      },
       "updated_via": "oilpriceapi+frankfurter",
       "updated_at": "2026-09-07T23:55:14.694Z",
       "mogas92_live": 122.8
     }
-  ]
+  ],
+  "pbbkb_note": {
+    "jakarta": "5% sepanjang 2019-2026",
+    "sumut": "5% (oct2019-Mar 2021) -> 7,5% efektif sejak 1 Apr 2021 (Pergub Sumut No.1/2021); tetap 7,5% pada harga jual s/d Sep 2026 meski Perda 1/2024 normatif menyebut 10%",
+    "rasio_estimasi": "Harga_Sumut ~= Harga_Jakarta x 1.024 (normal), x1.04 (Nov2023-Feb2024, outlier biaya distribusi), x1.0 (pra-Apr2021, PBBKB sama)",
+    "sumber": "Riset harga Sumut 2019-2026 (siaran pers Pertamina Sumbagut, Kompas, CNBC Indonesia, Detik Sumut, Bisnis, dll -- lihat riwayat chat)"
+  }
 }
