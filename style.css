@@ -82,3 +82,34 @@ tbody tr:hover{ background:rgba(255,255,255,0.03); }
 
 .footnote{ color:var(--muted); font-size:12px; line-height:1.6; margin-top:8px; }
 .footnote code{ background:var(--panel2); padding:1px 5px; border-radius:4px; }
+.footnote a{ color:var(--blue); }
+
+.region-switch{ display:inline-flex; gap:6px; margin-top:12px; background:var(--panel2); padding:4px; border-radius:10px; }
+.region-btn{
+  background:transparent; border:none; color:var(--muted); padding:7px 14px; border-radius:7px;
+  font-size:13px; font-weight:500; cursor:pointer; transition:background .15s,color .15s;
+}
+.region-btn:hover{ color:var(--text); }
+.region-btn.active{ background:var(--blue); color:#fff; }
+
+.update-form{ display:flex; flex-direction:column; gap:10px; max-width:480px; }
+.update-form label{ display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--muted); flex:1; }
+.update-form input, .update-form select{
+  background:var(--panel2); border:1px solid var(--border); color:var(--text);
+  padding:8px 10px; border-radius:8px; font-size:13.5px;
+}
+.update-form .form-row{ display:flex; gap:12px; }
+.update-form button{
+  background:var(--blue); color:#fff; border:none; padding:10px 16px; border-radius:8px;
+  font-size:13.5px; font-weight:600; cursor:pointer; align-self:flex-start;
+}
+.update-form button:hover{ opacity:.9; }
+#update-status{ font-size:12.5px; min-height:16px; }
+.status-ok{ color:var(--green); }
+.status-err{ color:var(--red); }
+.status-pending{ color:var(--amber); }
+@media (max-width:640px){
+  .update-form .form-row{ flex-direction:column; }
+  .region-switch{ margin-top:10px; }
+  .region-btn{ padding:6px 10px; font-size:12px; }
+}

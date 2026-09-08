@@ -11,6 +11,10 @@
   <h1>🚦 Peringatan Dini Harga Pertamax &amp; Pertamax Turbo</h1>
   <p>Skor gabungan gap harga keekonomian, durasi tertahan, momentum ICP/kurs, dan deviasi asumsi ICP APBN.</p>
   <div class="updated" id="last-updated">Memuat data...</div>
+  <div class="region-switch" role="group" aria-label="Pilih wilayah">
+    <button type="button" class="region-btn active" data-region="jakarta">DKI Jakarta</button>
+    <button type="button" class="region-btn" data-region="sumut">Sumatera Utara</button>
+  </div>
 </header>
 
 <main>
@@ -46,6 +50,45 @@
         <tbody id="table-turbo"></tbody>
       </table></div>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>Update Harga BBM</h2>
+    <div class="sub">Commit langsung ke <code>data.json</code> di GitHub. Token TIDAK disimpan permanen -- hanya di sessionStorage browser ini, hilang saat tab ditutup.</div>
+    <form id="price-update-form" class="update-form">
+      <label>GitHub Personal Access Token
+        <input type="password" id="gh-token" placeholder="ghp_... atau fine-grained token" autocomplete="off" />
+      </label>
+      <div class="footnote" style="margin:-6px 0 10px">
+        Buat di <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> --
+        pilih <b>fine-grained token</b>, batasi <b>Only select repositories</b> ke repo dashboard ini saja,
+        dan permission <b>Contents: Read and write</b> saja. Jangan pakai token classic dengan akses penuh.
+      </div>
+      <div class="form-row">
+        <label>Produk
+          <select id="upd-product">
+            <option value="ron92">Pertamax</option>
+            <option value="ron98">Pertamax Turbo</option>
+          </select>
+        </label>
+        <label>Wilayah
+          <select id="upd-region">
+            <option value="jakarta">DKI Jakarta</option>
+            <option value="sumut">Sumatera Utara</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Bulan berlaku
+          <input type="month" id="upd-month" />
+        </label>
+        <label>Harga baru (Rp/liter)
+          <input type="number" id="upd-price" min="1" step="1" placeholder="mis. 15950" />
+        </label>
+      </div>
+      <button type="submit">Simpan &amp; Commit ke GitHub</button>
+      <div id="update-status" class="status-idle"></div>
+    </form>
   </div>
 
   <div class="card">

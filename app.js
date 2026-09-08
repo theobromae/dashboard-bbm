@@ -85,10 +85,25 @@ function apbnAssumptionFor(monthStr, apbnData) {
   return apbnData && apbnData.values ? apbnData.values[year] : undefined;
 }
 
-function computeSeries(monthly, product, apbnData) {
+// Baca harga aktual dengan dukungan 2 format: angka biasa (lama, selalu
+// dianggap data Jakarta) ATAU objek per-wilayah { jakarta, sumut } (baru).
+function readActual(raw, region) {
+  if (raw == null) return null;
+  if (typeof raw === "number") return region === "jakarta" ? raw : null;
+  return raw[region] ?? null;
+}
+
+function computeSeries(monthly, product, apbnData, region) {
   const W = WEIGHTS[product];
-  const rows = monthly.map((r) => {
-    const actual = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
+  // Hanya proses bulan yang punya data harga untuk wilayah yang dipilih --
+  // wilayah selain Jakarta bisa jadi belum ada histori sama sekali.
+  const filtered = monthly.filter((r) => {
+    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
+    return readActual(raw, region) != null;
+  });
+  const rows = filtered.map((r) => {
+    const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
+    const actual = readActual(raw, region);
     const eco = hargaKeekonomian(r.icp, r.kurs, r.month, product, r.mogas92_live);
     const gapPct = ((eco - actual) / actual) * 100;
     return { month: r.month, icp: r.icp, kurs: r.kurs, actual, eco, gapPct };
@@ -168,8 +183,19 @@ function fmtPct(n) {
   return (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
 }
 
+let dashboardData = null;
+let currentRegion = "jakarta";
+
 function renderScoreCard(containerId, label, row) {
   const el = document.getElementById(containerId);
+  if (!row) {
+    el.innerHTML = `
+      <h2>${label}</h2>
+      <div class="sub">Belum ada data histori harga untuk wilayah ini.</div>
+      <div class="footnote">Gunakan form "Update Harga BBM" di bawah untuk mulai mencatat harga di wilayah ini.</div>
+    `;
+    return;
+  }
   el.innerHTML = `
     <h2>${label}</h2>
     <div class="sub">Bulan acuan: ${row.month}</div>
@@ -205,9 +231,16 @@ function renderScoreCard(containerId, label, row) {
   `;
 }
 
+const chartInstances = {};
+
 function renderChart(canvasId, rows, label, color) {
+  if (chartInstances[canvasId]) {
+    chartInstances[canvasId].destroy();
+    chartInstances[canvasId] = null;
+  }
+  if (!rows.length) return; // wilayah ini belum ada data sama sekali
   const ctx = document.getElementById(canvasId).getContext("2d");
-  new Chart(ctx, {
+  chartInstances[canvasId] = new Chart(ctx, {
     type: "line",
     data: {
       labels: rows.map((r) => r.month),
@@ -271,6 +304,10 @@ function renderChart(canvasId, rows, label, color) {
 
 function renderTable(tbodyId, rows) {
   const tbody = document.getElementById(tbodyId);
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">Belum ada data histori untuk wilayah ini</td></tr>`;
+    return;
+  }
   const last12 = rows.slice(-12);
   tbody.innerHTML = last12
     .map(
@@ -304,20 +341,20 @@ function waitForChart(timeoutMs = 5000) {
   });
 }
 
-async function main() {
-  await waitForChart();
-  const res = await fetch("data.json");
-  const data = await res.json();
+function renderAll(region) {
+  currentRegion = region;
+  const data = dashboardData;
   const apbnData = data.apbn_icp_assumptions || { values: {}, revisions: [] };
 
-  const ron92Rows = computeSeries(data.monthly, "ron92", apbnData);
-  const ron98Rows = computeSeries(data.monthly, "ron98", apbnData);
+  const ron92Rows = computeSeries(data.monthly, "ron92", apbnData, region);
+  const ron98Rows = computeSeries(data.monthly, "ron98", apbnData, region);
 
-  const last92 = ron92Rows[ron92Rows.length - 1];
-  const last98 = ron98Rows[ron98Rows.length - 1];
+  const last92 = ron92Rows[ron92Rows.length - 1] ?? null;
+  const last98 = ron98Rows[ron98Rows.length - 1] ?? null;
 
-  renderScoreCard("card-pertamax", "Pertamax (RON 92)", last92);
-  renderScoreCard("card-turbo", "Pertamax Turbo (RON 98)", last98);
+  const regionLabel = region === "jakarta" ? "DKI Jakarta" : "Sumatera Utara";
+  renderScoreCard("card-pertamax", `Pertamax (RON 92) — ${regionLabel}`, last92);
+  renderScoreCard("card-turbo", `Pertamax Turbo (RON 98) — ${regionLabel}`, last98);
 
   renderChart("chart-pertamax", ron92Rows, "Pertamax", "#e0524a");
   renderChart("chart-turbo", ron98Rows, "Pertamax Turbo", "#e0524a");
@@ -326,7 +363,138 @@ async function main() {
   renderTable("table-turbo", ron98Rows);
 
   document.getElementById("last-updated").textContent =
-    "Data bulanan sampai: " + data.monthly[data.monthly.length - 1].month;
+    "Data bulanan sampai: " + data.monthly[data.monthly.length - 1].month + " · Wilayah: " + regionLabel;
+
+  // sinkronkan tampilan tombol switch region
+  document.querySelectorAll(".region-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.region === region);
+  });
+}
+
+function setupRegionSwitch() {
+  document.querySelectorAll(".region-btn").forEach((btn) => {
+    btn.addEventListener("click", () => renderAll(btn.dataset.region));
+  });
+}
+
+// ============================================================
+// FORM UPDATE HARGA -- commit langsung ke data.json di GitHub
+// lewat GitHub Contents API, pakai Personal Access Token yang
+// diketik sendiri oleh pengguna (TIDAK disimpan permanen -- cuma
+// sessionStorage, hilang saat tab ditutup).
+// ============================================================
+const GITHUB_OWNER = location.hostname.split(".")[0];
+const GITHUB_REPO = location.pathname.split("/").filter(Boolean)[0] || "";
+
+function getToken() {
+  return sessionStorage.getItem("bbm_gh_token") || "";
+}
+function setToken(t) {
+  if (t) sessionStorage.setItem("bbm_gh_token", t);
+  else sessionStorage.removeItem("bbm_gh_token");
+}
+
+async function commitPriceUpdate({ token, product, region, month, price }) {
+  const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/data.json`;
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+  };
+
+  // 1. Ambil isi & sha terbaru data.json langsung dari GitHub (bukan dari
+  //    cache browser) supaya tidak menimpa perubahan lain yang mungkin
+  //    sudah terjadi (mis. dari GitHub Actions).
+  const getRes = await fetch(apiUrl, { headers });
+  if (!getRes.ok) throw new Error(`Gagal mengambil data.json (HTTP ${getRes.status}). Cek token & nama repo.`);
+  const fileMeta = await getRes.json();
+  const content = JSON.parse(decodeURIComponent(escape(atob(fileMeta.content))));
+
+  // 2. Cari/buat baris bulan yang dimaksud
+  let row = content.monthly.find((r) => r.month === month);
+  if (!row) {
+    const prev = content.monthly[content.monthly.length - 1];
+    row = { month, icp: prev.icp, kurs: prev.kurs, pertamax_actual: prev.pertamax_actual, turbo_actual: prev.turbo_actual };
+    content.monthly.push(row);
+    content.monthly.sort((a, b) => (a.month < b.month ? -1 : 1));
+  }
+
+  // 3. Migrasi otomatis dari format lama (angka biasa) ke format per-wilayah
+  //    kalau baris ini masih format lama.
+  const field = product === "ron92" ? "pertamax_actual" : "turbo_actual";
+  if (typeof row[field] === "number") {
+    row[field] = { jakarta: row[field], sumut: null };
+  } else if (row[field] == null) {
+    row[field] = { jakarta: null, sumut: null };
+  }
+  row[field][region] = price;
+
+  // 4. Commit balik ke GitHub
+  const newContentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2) + "\n")));
+  const putRes = await fetch(apiUrl, {
+    method: "PUT",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `chore: update harga ${product === "ron92" ? "Pertamax" : "Pertamax Turbo"} ${region} ${month} -> Rp${price}`,
+      content: newContentB64,
+      sha: fileMeta.sha,
+    }),
+  });
+  if (!putRes.ok) {
+    const errBody = await putRes.text();
+    throw new Error(`Gagal commit (HTTP ${putRes.status}): ${errBody}`);
+  }
+  return content;
+}
+
+function setupUpdateForm() {
+  const form = document.getElementById("price-update-form");
+  if (!form) return;
+
+  const tokenInput = document.getElementById("gh-token");
+  tokenInput.value = getToken();
+  tokenInput.addEventListener("change", () => setToken(tokenInput.value.trim()));
+
+  const monthInput = document.getElementById("upd-month");
+  const now = new Date();
+  monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const statusEl = document.getElementById("update-status");
+    const token = tokenInput.value.trim();
+    const product = document.getElementById("upd-product").value;
+    const region = document.getElementById("upd-region").value;
+    const month = monthInput.value;
+    const price = Number(document.getElementById("upd-price").value);
+
+    if (!token) { statusEl.textContent = "Isi GitHub Token dulu."; statusEl.className = "status-err"; return; }
+    if (!price || price <= 0) { statusEl.textContent = "Harga tidak valid."; statusEl.className = "status-err"; return; }
+
+    statusEl.textContent = "Mengirim ke GitHub...";
+    statusEl.className = "status-pending";
+    try {
+      setToken(token);
+      const updatedData = await commitPriceUpdate({ token, product, region, month, price });
+      dashboardData = updatedData;
+      renderAll(currentRegion);
+      statusEl.textContent = `Berhasil! ${month} disimpan ke GitHub. Situs akan ikut ter-update dalam 1-2 menit.`;
+      statusEl.className = "status-ok";
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Gagal: " + err.message;
+      statusEl.className = "status-err";
+    }
+  });
+}
+
+async function main() {
+  await waitForChart();
+  const res = await fetch("data.json");
+  dashboardData = await res.json();
+
+  setupRegionSwitch();
+  setupUpdateForm();
+  renderAll("jakarta");
 }
 
 main().catch((err) => {
