@@ -32,6 +32,9 @@ const CODES = [BRENT_CODE, DUBAI_CODE, MOGAS92_CODE];
 // Catatan: model ini melemah saat guncangan geopolitik ekstrem (mis. April
 // 2026 saat konflik Timur Tengah -- selisih bisa >US$12/barel).
 const ICP_MODEL = { a: 0.7575, b: 0.2887, c: -4.722 };
+// Fallback kalau Dubai kebetulan tidak tersedia hari itu (R2=0.983, sedikit
+// lebih rendah tapi tetap solid) -- dipakai jg utk rekonstruksi histori 2019-2026.
+const ICP_MODEL_BRENT_ONLY = { a: 1.045, c: -5.00 };
 
 const CRACK_SPREAD_RON98 = 17.02; // hasil riset & backtest sebelumnya
 
@@ -96,8 +99,8 @@ async function main() {
   const mogas92 = prices[MOGAS92_CODE];
   const mogas92Meta = meta[MOGAS92_CODE];
 
-  if (brent == null || dubai == null) {
-    throw new Error("Brent/Dubai tidak ditemukan di respons API -- cek nama kode & langganan akun.");
+  if (brent == null) {
+    throw new Error("Brent tidak ditemukan di respons API -- cek nama kode & langganan akun.");
   }
 
   // Mogas92 dari oilpriceapi adalah kontrak calendar-month average swap yang
@@ -114,10 +117,28 @@ async function main() {
     );
   }
 
-  const icpEstimate = ICP_MODEL.a * brent + ICP_MODEL.b * dubai + ICP_MODEL.c;
+  const icpEstimate =
+    dubai != null
+      ? ICP_MODEL.a * brent + ICP_MODEL.b * dubai + ICP_MODEL.c
+      : ICP_MODEL_BRENT_ONLY.a * brent + ICP_MODEL_BRENT_ONLY.c;
 
   const now = new Date();
-  const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const dateKey = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const monthKey = dateKey.slice(0, 7);
+
+  // --- Simpan snapshot HARIAN (upsert -- kalau workflow jalan >1x sehari,
+  // timpa entri hari ini, jangan duplikat) ---
+  if (!Array.isArray(data.daily)) data.daily = [];
+  const dailyRow = {
+    date: dateKey,
+    icp: Math.round(icpEstimate * 100) / 100,
+    kurs: Math.round(kurs),
+  };
+  if (mogas92Usable) dailyRow.mogas92_live = Math.round(mogas92 * 100) / 100;
+  const existingDailyIdx = data.daily.findIndex((d) => d.date === dateKey);
+  if (existingDailyIdx >= 0) data.daily[existingDailyIdx] = dailyRow;
+  else data.daily.push(dailyRow);
+  data.daily.sort((a, b) => (a.date < b.date ? -1 : 1));
 
   const monthly = data.monthly;
   let row = monthly.find((r) => r.month === monthKey);
@@ -145,7 +166,7 @@ async function main() {
   row.updated_at = now.toISOString();
 
   await fs.writeFile(dataPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
-  console.log(`Updated ${monthKey}: ICP~${row.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${row.kurs}, mogas92_live=${row.mogas92_live ?? "n/a (fallback ke ICP+crack)"}`);
+  console.log(`Updated ${dateKey} (bulan ${monthKey}): ICP~${dailyRow.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${dailyRow.kurs}, mogas92_live=${dailyRow.mogas92_live ?? "n/a (fallback ke ICP+crack)"}. Total snapshot harian: ${data.daily.length}.`);
 }
 
 main().catch((err) => {

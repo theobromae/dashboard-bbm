@@ -85,12 +85,101 @@ function apbnAssumptionFor(monthStr, apbnData) {
   return apbnData && apbnData.values ? apbnData.values[year] : undefined;
 }
 
-// Baca harga aktual dengan dukungan 2 format: angka biasa (lama, selalu
-// dianggap data Jakarta) ATAU objek per-wilayah { jakarta, sumut } (baru).
-function readActual(raw, region) {
-  if (raw == null) return null;
-  if (typeof raw === "number") return region === "jakarta" ? raw : null;
-  return raw[region] ?? null;
+// ============================================================
+// TIMELINE HARIAN/MINGGUAN -- dibangun dari price_changes (tanggal presisi)
+// + daily (ICP/kurs harian, mulai terkumpul sejak fitur ini aktif) dengan
+// fallback ke nilai bulanan yang sudah tervalidasi utk histori sebelum itu.
+// (Skor peringatan dini TETAP dihitung bulanan -- ini hanya utk chart/tabel.)
+// ============================================================
+
+function dateRangeDays(startStr, endStr) {
+  const out = [];
+  let d = new Date(startStr + "T00:00:00Z");
+  const end = new Date(endStr + "T00:00:00Z");
+  while (d <= end) {
+    out.push(d.toISOString().slice(0, 10));
+    d = new Date(d.getTime() + 86400000);
+  }
+  return out;
+}
+
+function getActualForDate(data, product, region, dateStr) {
+  const prodKey = product === "ron92" ? "pertamax" : "turbo";
+  const field = product === "ron92" ? "pertamax_actual" : "turbo_actual";
+  const month = dateStr.slice(0, 7);
+  const monthRow = data.monthly.find((r) => r.month === month);
+  const monthValue = monthRow ? readActual(monthRow[field], region) : null;
+
+  const changes = data.price_changes?.[prodKey]?.[region] || [];
+  // perubahan presisi DI DALAM bulan ini yang bukan tanggal 1 (mis. 10 Agu, 29 Mar)
+  const sameMonthMidChanges = changes.filter((c) => c.date.slice(0, 7) === month && c.date.slice(8, 10) !== "01");
+  if (sameMonthMidChanges.length === 0) return monthValue; // tidak ada info presisi -> pakai nilai bulanan (flat)
+
+  const applicable = sameMonthMidChanges.filter((c) => c.date <= dateStr);
+  if (applicable.length > 0) return applicable[applicable.length - 1].price;
+
+  // sebelum tanggal perubahan pertama di bulan ini -> pakai nilai bulan sebelumnya
+  const idx = data.monthly.findIndex((r) => r.month === month);
+  const prevRow = idx > 0 ? data.monthly[idx - 1] : null;
+  return prevRow ? readActual(prevRow[field], region) : monthValue;
+}
+
+function getIcpKursForDate(data, dateStr, dailyMap) {
+  const dailyRow = dailyMap ? dailyMap.get(dateStr) : (data.daily || []).find((d) => d.date === dateStr);
+  if (dailyRow) return { icp: dailyRow.icp, kurs: dailyRow.kurs, mogas92_live: dailyRow.mogas92_live };
+  const month = dateStr.slice(0, 7);
+  const monthRow = data.monthly.find((r) => r.month === month);
+  return monthRow ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: monthRow.mogas92_live } : { icp: null, kurs: null };
+}
+
+function buildDailyTimeline(data, product, region) {
+  const firstMonth = data.monthly[0].month;
+  const startStr = `${firstMonth}-01`;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastDaily = (data.daily || [])[data.daily.length - 1]?.date;
+  const endStr = lastDaily && lastDaily > todayStr ? lastDaily : todayStr;
+
+  // Map sekali di awal -- jauh lebih cepat drpd .find() per hari saat
+  // data.daily sudah berisi ribuan baris (histori penuh 2019-2026).
+  const dailyMap = new Map((data.daily || []).map((d) => [d.date, d]));
+
+  const days = dateRangeDays(startStr, endStr);
+  return days.map((date) => {
+    const actual = getActualForDate(data, product, region, date);
+    const { icp, kurs, mogas92_live } = getIcpKursForDate(data, date, dailyMap);
+    const eco = icp != null && kurs != null ? hargaKeekonomian(icp, kurs, date.slice(0, 7), product, mogas92_live) : null;
+    return { date, actual, icp, kurs, eco };
+  }).filter((r) => r.actual != null);
+}
+
+function isoWeekKey(dateStr) {
+  const d = new Date(dateStr + "T00:00:00Z");
+  const day = (d.getUTCDay() + 6) % 7; // Senin=0
+  d.setUTCDate(d.getUTCDate() - day); // mundur ke Senin minggu ini
+  return d.toISOString().slice(0, 10);
+}
+
+function resampleWeekly(daily) {
+  const buckets = new Map();
+  for (const r of daily) {
+    const wk = isoWeekKey(r.date);
+    if (!buckets.has(wk)) buckets.set(wk, []);
+    buckets.get(wk).push(r);
+  }
+  return [...buckets.entries()].map(([weekStart, items]) => {
+    const valid = items.filter((i) => i.icp != null);
+    const avgIcp = valid.length ? valid.reduce((s, i) => s + i.icp, 0) / valid.length : null;
+    const avgKurs = valid.length ? valid.reduce((s, i) => s + i.kurs, 0) / valid.length : null;
+    const last = items[items.length - 1];
+    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, eco: last.eco };
+  });
+}
+
+function getTimelineForResolution(data, product, region, resolution) {
+  const daily = buildDailyTimeline(data, product, region);
+  if (resolution === "harian") return daily;
+  if (resolution === "mingguan") return resampleWeekly(daily);
+  return null; // "bulanan" pakai jalur computeSeries yang sudah ada
 }
 
 function computeSeries(monthly, product, apbnData, region) {
@@ -246,7 +335,7 @@ function renderChart(canvasId, rows, label, color) {
   chartInstances[canvasId] = new Chart(ctx, {
     type: "line",
     data: {
-      labels: rows.map((r) => r.month),
+      labels: rows.map((r) => r.month || r.date),
       datasets: [
         {
           label: `${label} - Aktual`,
@@ -285,6 +374,16 @@ function renderChart(canvasId, rows, label, color) {
       plugins: {
         legend: { labels: { color: "#e8ecf5", boxWidth: 14, font: { size: 11 } } },
         tooltip: { mode: "index", intersect: false },
+        zoom: {
+          pan: { enabled: true, mode: "x", modifierKey: null },
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            drag: { enabled: false },
+            mode: "x",
+          },
+          limits: { x: { minRange: 10 } },
+        },
       },
       scales: {
         x: { ticks: { color: "#93a0b8", maxTicksLimit: window.innerWidth < 640 ? 6 : 14 }, grid: { color: "#2a3348" } },
@@ -305,24 +404,24 @@ function renderChart(canvasId, rows, label, color) {
   });
 }
 
-function renderTable(tbodyId, rows) {
+function renderTable(tbodyId, rows, showAll) {
   const tbody = document.getElementById(tbodyId);
-  if (!rows.length) {
+  if (!rows || !rows.length) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">Belum ada data histori untuk wilayah ini</td></tr>`;
     return;
   }
-  const last12 = rows.slice(-12);
-  tbody.innerHTML = last12
+  const displayRows = showAll ? rows : rows.slice(-12);
+  tbody.innerHTML = displayRows
     .map(
       (r) => `
     <tr>
-      <td>${r.month}</td>
+      <td>${r.month || r.date}</td>
       <td>${fmtRp(r.actual)}${r.isEstimated ? " *" : ""}</td>
-      <td>${fmtRp(r.eco)}</td>
-      <td>${fmtPct(r.gapPct)}</td>
-      <td>${r.duration}</td>
-      <td>${Math.round(r.composite)}</td>
-      <td><span class="badge ${r.light}">${lightLabel(r.light)}</span></td>
+      <td>${r.eco != null ? fmtRp(r.eco) : "-"}</td>
+      <td>${r.gapPct != null ? fmtPct(r.gapPct) : "-"}</td>
+      <td>${r.duration ?? "-"}</td>
+      <td>${r.composite != null ? Math.round(r.composite) : "-"}</td>
+      <td>${r.light ? `<span class="badge ${r.light}">${lightLabel(r.light)}</span>` : "-"}</td>
     </tr>`
     )
     .join("");
@@ -344,39 +443,61 @@ function waitForChart(timeoutMs = 5000) {
   });
 }
 
-function renderAll(region) {
+let currentResolution = "bulanan";
+
+function renderAll(region, resolution) {
   currentRegion = region;
+  currentResolution = resolution || currentResolution;
   const data = dashboardData;
   const apbnData = data.apbn_icp_assumptions || { values: {}, revisions: [] };
 
-  const ron92Rows = computeSeries(data.monthly, "ron92", apbnData, region);
-  const ron98Rows = computeSeries(data.monthly, "ron98", apbnData, region);
+  // Skor peringatan dini SELALU dihitung bulanan (kalibrasi backtest kita
+  // berbasis siklus bulanan) -- resolusi hanya memengaruhi chart & tabel.
+  const ron92Monthly = computeSeries(data.monthly, "ron92", apbnData, region);
+  const ron98Monthly = computeSeries(data.monthly, "ron98", apbnData, region);
 
-  const last92 = ron92Rows[ron92Rows.length - 1] ?? null;
-  const last98 = ron98Rows[ron98Rows.length - 1] ?? null;
+  const last92 = ron92Monthly[ron92Monthly.length - 1] ?? null;
+  const last98 = ron98Monthly[ron98Monthly.length - 1] ?? null;
 
   const regionLabel = region === "jakarta" ? "DKI Jakarta" : "Sumatera Utara";
   renderScoreCard("card-pertamax", `Pertamax (RON 92) — ${regionLabel}`, last92);
   renderScoreCard("card-turbo", `Pertamax Turbo (RON 98) — ${regionLabel}`, last98);
 
-  renderChart("chart-pertamax", ron92Rows, "Pertamax", "#e0524a");
-  renderChart("chart-turbo", ron98Rows, "Pertamax Turbo", "#e0524a");
+  const ron92Display = currentResolution === "bulanan" ? ron92Monthly : getTimelineForResolution(data, "ron92", region, currentResolution);
+  const ron98Display = currentResolution === "bulanan" ? ron98Monthly : getTimelineForResolution(data, "ron98", region, currentResolution);
 
-  renderTable("table-pertamax", ron92Rows);
-  renderTable("table-turbo", ron98Rows);
+  renderChart("chart-pertamax", ron92Display, "Pertamax", "#e0524a");
+  renderChart("chart-turbo", ron98Display, "Pertamax Turbo", "#e0524a");
 
+  const showAll = currentResolution !== "bulanan";
+  renderTable("table-pertamax", ron92Display, showAll);
+  renderTable("table-turbo", ron98Display, showAll);
+
+  const resLabel = { bulanan: "Bulanan", mingguan: "Mingguan", harian: "Harian" }[currentResolution];
   document.getElementById("last-updated").textContent =
-    "Data bulanan sampai: " + data.monthly[data.monthly.length - 1].month + " · Wilayah: " + regionLabel;
+    "Data bulanan sampai: " + data.monthly[data.monthly.length - 1].month + " · Wilayah: " + regionLabel + " · Resolusi: " + resLabel;
 
-  // sinkronkan tampilan tombol switch region
+  // sinkronkan tampilan tombol switch
   document.querySelectorAll(".region-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.region === region);
+  });
+  document.querySelectorAll(".res-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.res === currentResolution);
   });
 }
 
 function setupRegionSwitch() {
   document.querySelectorAll(".region-btn").forEach((btn) => {
-    btn.addEventListener("click", () => renderAll(btn.dataset.region));
+    btn.addEventListener("click", () => renderAll(btn.dataset.region, currentResolution));
+  });
+  document.querySelectorAll(".res-btn").forEach((btn) => {
+    btn.addEventListener("click", () => renderAll(currentRegion, btn.dataset.res));
+  });
+  document.querySelectorAll(".reset-zoom-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const chart = chartInstances[btn.dataset.target];
+      if (chart) chart.resetZoom();
+    });
   });
 }
 
@@ -397,7 +518,7 @@ function setToken(t) {
   else sessionStorage.removeItem("bbm_gh_token");
 }
 
-async function commitPriceUpdate({ token, product, region, month, price }) {
+async function commitPriceUpdate({ token, product, region, date, price }) {
   const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/data.json`;
   const headers = {
     Authorization: `Bearer ${token}`,
@@ -412,7 +533,24 @@ async function commitPriceUpdate({ token, product, region, month, price }) {
   const fileMeta = await getRes.json();
   const content = JSON.parse(decodeURIComponent(escape(atob(fileMeta.content))));
 
-  // 2. Cari/buat baris bulan yang dimaksud
+  const prodKey = product === "ron92" ? "pertamax" : "turbo";
+
+  // 2. Catat di log price_changes (tanggal presisi) -- ini yg dipakai
+  //    tampilan harian/mingguan.
+  if (!content.price_changes) content.price_changes = { pertamax: { jakarta: [], sumut: [] }, turbo: { jakarta: [], sumut: [] } };
+  if (!content.price_changes[prodKey]) content.price_changes[prodKey] = { jakarta: [], sumut: [] };
+  if (!content.price_changes[prodKey][region]) content.price_changes[prodKey][region] = [];
+  const log = content.price_changes[prodKey][region];
+  const existingIdx = log.findIndex((e) => e.date === date);
+  if (existingIdx >= 0) log[existingIdx] = { date, price };
+  else log.push({ date, price });
+  log.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  // 3. Sinkronkan juga baris bulan terkait di "monthly" (dipakai tampilan
+  //    bulanan & skor peringatan dini) -- hanya kalau tanggal ini adalah
+  //    perubahan TERBARU untuk bulan tsb (biar tidak menimpa dgn nilai lama
+  //    kalau user input tanggal mundur).
+  const month = date.slice(0, 7);
   let row = content.monthly.find((r) => r.month === month);
   if (!row) {
     const prev = content.monthly[content.monthly.length - 1];
@@ -420,19 +558,16 @@ async function commitPriceUpdate({ token, product, region, month, price }) {
     content.monthly.push(row);
     content.monthly.sort((a, b) => (a.month < b.month ? -1 : 1));
   }
-
-  // 3. Migrasi otomatis dari format lama (angka biasa) ke format per-wilayah
-  //    kalau baris ini masih format lama.
   const field = product === "ron92" ? "pertamax_actual" : "turbo_actual";
-  if (typeof row[field] === "number") {
-    row[field] = { jakarta: row[field], sumut: null };
-  } else if (row[field] == null) {
-    row[field] = { jakarta: null, sumut: null };
-  }
-  row[field][region] = price;
-  if (region !== "jakarta" && row.sumut_estimated) {
-    const estKey = product === "ron92" ? "pertamax" : "turbo";
-    delete row.sumut_estimated[estKey];
+  if (typeof row[field] === "number") row[field] = { jakarta: row[field], sumut: null };
+  else if (row[field] == null) row[field] = { jakarta: null, sumut: null };
+
+  // hanya update nilai bulanan kalau tanggal ini adalah entri TERBARU utk bulan tsb
+  const monthEntries = log.filter((e) => e.date.slice(0, 7) === month);
+  const latestInMonth = monthEntries[monthEntries.length - 1];
+  if (latestInMonth && latestInMonth.date === date) {
+    row[field][region] = price;
+    if (region !== "jakarta" && row.sumut_estimated) delete row.sumut_estimated[prodKey];
   }
 
   // 4. Commit balik ke GitHub
@@ -441,7 +576,7 @@ async function commitPriceUpdate({ token, product, region, month, price }) {
     method: "PUT",
     headers: { ...headers, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: `chore: update harga ${product === "ron92" ? "Pertamax" : "Pertamax Turbo"} ${region} ${month} -> Rp${price}`,
+      message: `chore: update harga ${product === "ron92" ? "Pertamax" : "Pertamax Turbo"} ${region} ${date} -> Rp${price}`,
       content: newContentB64,
       sha: fileMeta.sha,
     }),
@@ -461,9 +596,9 @@ function setupUpdateForm() {
   tokenInput.value = getToken();
   tokenInput.addEventListener("change", () => setToken(tokenInput.value.trim()));
 
-  const monthInput = document.getElementById("upd-month");
+  const dateInput = document.getElementById("upd-date");
   const now = new Date();
-  monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  dateInput.value = now.toISOString().slice(0, 10);
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -471,20 +606,21 @@ function setupUpdateForm() {
     const token = tokenInput.value.trim();
     const product = document.getElementById("upd-product").value;
     const region = document.getElementById("upd-region").value;
-    const month = monthInput.value;
+    const date = dateInput.value;
     const price = Number(document.getElementById("upd-price").value);
 
     if (!token) { statusEl.textContent = "Isi GitHub Token dulu."; statusEl.className = "status-err"; return; }
+    if (!date) { statusEl.textContent = "Isi tanggal berlaku."; statusEl.className = "status-err"; return; }
     if (!price || price <= 0) { statusEl.textContent = "Harga tidak valid."; statusEl.className = "status-err"; return; }
 
     statusEl.textContent = "Mengirim ke GitHub...";
     statusEl.className = "status-pending";
     try {
       setToken(token);
-      const updatedData = await commitPriceUpdate({ token, product, region, month, price });
+      const updatedData = await commitPriceUpdate({ token, product, region, date, price });
       dashboardData = updatedData;
-      renderAll(currentRegion);
-      statusEl.textContent = `Berhasil! ${month} disimpan ke GitHub. Situs akan ikut ter-update dalam 1-2 menit.`;
+      renderAll(currentRegion, currentResolution);
+      statusEl.textContent = `Berhasil! ${date} disimpan ke GitHub. Situs akan ikut ter-update dalam 1-2 menit.`;
       statusEl.className = "status-ok";
     } catch (err) {
       console.error(err);
@@ -501,7 +637,7 @@ async function main() {
 
   setupRegionSwitch();
   setupUpdateForm();
-  renderAll("jakarta");
+  renderAll("jakarta", "bulanan");
 }
 
 main().catch((err) => {

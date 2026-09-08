@@ -56,4 +56,4 @@ R²=0,985, RMSE≈US$2,55/barel. Formula ini sudah diterapkan di `update-data.mj
 - **Harga keekonomian adalah estimasi**, bukan angka resmi Pertamina.
 - **Backtest hanya berdasarkan 4 kejadian kenaikan besar per produk** — sample kecil, angka recall/presisi indikatif, bukan jaminan statistik ke depan.
 - **Model ini secara struktural tidak bisa menangkap kenaikan bertahap kecil (~10-12%) tanpa penahanan gap besar** — hanya efektif untuk pola "ditahan lama lalu meledak."
-- **Estimasi ICP dari Brent/Dubai (regresi terkalibrasi, R²=0,985) melemah saat guncangan geopolitik ekstrem** — bisa meleset >US$12/barel pada bulan dengan lonjakan tiba-tiba seperti April 2026.
+- **ICP & kurs histori 2019-2026 kini direkonstruksi dari data harian riil** (Brent/Dubai via regresi terkalibrasi R²=0,985 utk ICP; kurs Jual/Beli resmi Bank Indonesia utk kurs), menggantikan interpolasi kasar sebelumnya. 51 bulan ICP tetap pakai kutipan resmi ESDM (lebih otoritatif dari estimasi regresi). **Estimasi ICP dari Brent/Dubai tetap melemah saat guncangan geopolitik ekstrem** — bisa meleset >US$12/barel pada bulan dengan lonjakan tiba-tiba seperti April 2026.
