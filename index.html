@@ -15,6 +15,11 @@
     <button type="button" class="region-btn active" data-region="jakarta">DKI Jakarta</button>
     <button type="button" class="region-btn" data-region="sumut">Sumatera Utara</button>
   </div>
+  <div class="region-switch" role="group" aria-label="Pilih resolusi chart">
+    <button type="button" class="res-btn active" data-res="bulanan">Bulanan</button>
+    <button type="button" class="res-btn" data-res="mingguan">Mingguan</button>
+    <button type="button" class="res-btn" data-res="harian">Harian</button>
+  </div>
 </header>
 
 <main>
@@ -24,14 +29,24 @@
   </div>
 
   <div class="card chart-card">
-    <h2>Pertamax (RON 92) — Aktual vs Keekonomian vs ICP</h2>
-    <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
+    <div class="chart-head">
+      <div>
+        <h2>Pertamax (RON 92) — Aktual vs Keekonomian vs ICP</h2>
+        <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan). Scroll/pinch utk zoom, drag utk geser ke histori paling awal.</div>
+      </div>
+      <button type="button" class="reset-zoom-btn" data-target="chart-pertamax">Reset Zoom</button>
+    </div>
     <div class="chart-wrap"><canvas id="chart-pertamax" role="img" aria-label="Grafik Pertamax aktual vs keekonomian vs ICP"></canvas></div>
   </div>
 
   <div class="card chart-card">
-    <h2>Pertamax Turbo (RON 98) — Aktual vs Keekonomian vs ICP</h2>
-    <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan)</div>
+    <div class="chart-head">
+      <div>
+        <h2>Pertamax Turbo (RON 98) — Aktual vs Keekonomian vs ICP</h2>
+        <div class="sub">Garis merah = harga jual aktual &middot; garis oranye putus-putus = harga keekonomian (estimasi formula) &middot; garis biru tipis = ICP (sumbu kanan). Scroll/pinch utk zoom, drag utk geser ke histori paling awal.</div>
+      </div>
+      <button type="button" class="reset-zoom-btn" data-target="chart-turbo">Reset Zoom</button>
+    </div>
     <div class="chart-wrap"><canvas id="chart-turbo" role="img" aria-label="Grafik Pertamax Turbo aktual vs keekonomian vs ICP"></canvas></div>
   </div>
 
@@ -81,8 +96,8 @@
         </label>
       </div>
       <div class="form-row">
-        <label>Bulan berlaku
-          <input type="month" id="upd-month" />
+        <label>Tanggal berlaku
+          <input type="date" id="upd-date" />
         </label>
         <label>Harga baru (Rp/liter)
           <input type="number" id="upd-price" min="1" step="1" placeholder="mis. 15950" />
@@ -110,6 +125,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
         onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';s.onload=function(){window.dispatchEvent(new Event('chartjs-ready'));};document.head.appendChild(s);"
         onload="window.dispatchEvent(new Event('chartjs-ready'));"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.2.0/chartjs-plugin-zoom.min.js"
+        onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.2.0/dist/chartjs-plugin-zoom.min.js';document.head.appendChild(s);"></script>
 <script src="app.js"></script>
 </body>
 </html>
