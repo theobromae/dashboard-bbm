@@ -137,7 +137,12 @@ function getIcpKursForDate(data, dateStr, dailyMap) {
   if (dailyRow) return { icp: dailyRow.icp, kurs: dailyRow.kurs, mogas92_live: dailyRow.mogas92_live };
   const month = dateStr.slice(0, 7);
   const monthRow = data.monthly.find((r) => r.month === month);
-  return monthRow ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: monthRow.mogas92_live } : { icp: null, kurs: null };
+  // PENTING: mogas92_live di baris bulanan cuma snapshot SATU hari tertentu
+  // (bukan rata-rata bulan) -- jangan dipakai utk tanggal lain yg kebetulan
+  // tidak punya entri "daily" sendiri, atau nilainya akan salah diulang di
+  // banyak tanggal berbeda. Fallback bulan hanya pakai ICP+kurs, MOPS RON92
+  // kembali ke estimasi ICP+crack seperti biasa.
+  return monthRow ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: null } : { icp: null, kurs: null };
 }
 
 function buildDailyTimeline(data, product, region) {
