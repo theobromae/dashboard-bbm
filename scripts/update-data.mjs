@@ -19,12 +19,24 @@
 //    yang benar untuk "Singapore Mogas 92" di dashboard/API
 //    reference oilpriceapi.com akun kamu, karena dokumentasi
 //    publik mereka tidak selalu konsisten soal nama kode ini.
+//
+// CATATAN PERBAIKAN (2026-09-10):
+// Brent (BRENT_SPOT_USD) sekarang SENGAJA di-fetch di request
+// terpisah dari Dubai+Mogas. Root cause bug sebelumnya: saat
+// ketiga kode diminta dalam satu request gabungan, oilpriceapi
+// tampaknya menerapkan satu freshness window per-batch (bukan
+// per-kode) -- Dubai/Mogas pakai window ~1 hari (source
+// "market_reporting"), sedangkan Brent sumbernya "eia_api" yang
+// wajar update mingguan. Akibatnya Brent yang sebenarnya masih
+// valid (8 hari, dalam window 13,75 harinya sendiri) malah
+// dibuang ke data.missing dan dianggap "tidak ditemukan" oleh
+// script lama. Memisahkan request Brent membuatnya dievaluasi
+// dengan freshness window yang sesuai sumbernya sendiri.
 // ============================================================
 
 const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // dikonfirmasi dari respons live API
 const BRENT_CODE = "BRENT_SPOT_USD"; // dikonfirmasi dari respons live API
 const DUBAI_CODE = "DUBAI_CRUDE_USD"; // dikonfirmasi dari respons live API
-const CODES = [BRENT_CODE, DUBAI_CODE, MOGAS92_CODE];
 
 // Kalibrasi regresi linear ICP = a*Brent + b*Dubai + c, dari 51 bulan data
 // ICP resmi (ESDM, tersitasi) dicocokkan dengan rata-rata bulanan Brent &
@@ -38,15 +50,20 @@ const ICP_MODEL_BRENT_ONLY = { a: 1.045, c: -5.00 };
 
 const CRACK_SPREAD_RON98 = 17.02; // hasil riset & backtest sebelumnya
 
-async function fetchOilPrices() {
+// Fetch satu atau lebih kode dari oilpriceapi.com dalam SATU request.
+// Kode yang tergolong "stale" menurut freshness window request ini akan
+// muncul di data.missing, bukan data.prices -- keduanya dikembalikan
+// apa adanya supaya caller yang memutuskan (bukan fungsi ini) apakah itu
+// masalah nyata atau cuma window yang tidak cocok untuk kode tsb.
+async function fetchOilPricesFor(codes) {
   const apiKey = process.env.OILPRICEAPI_KEY;
   if (!apiKey) throw new Error("OILPRICEAPI_KEY tidak ditemukan di environment (cek GitHub Secret).");
 
-  const url = `https://api.oilpriceapi.com/v1/prices/latest?by_code=${CODES.join(",")}`;
+  const url = `https://api.oilpriceapi.com/v1/prices/latest?by_code=${codes.join(",")}`;
   const res = await fetch(url, { headers: { Authorization: `Token ${apiKey}` } });
   if (!res.ok) throw new Error(`oilpriceapi.com gagal: HTTP ${res.status} ${await res.text()}`);
   const json = await res.json();
-  console.log("Respons oilpriceapi.com:", JSON.stringify(json));
+  console.log(`Respons oilpriceapi.com [${codes.join(",")}]:`, JSON.stringify(json));
 
   // Struktur nyata: { status, data: { prices: [...], missing: [...], metadata } }
   // (bukan array/objek langsung di bawah "data" seperti dugaan awal)
@@ -57,7 +74,13 @@ async function fetchOilPrices() {
     prices[item.code] = item.price;
     meta[item.code] = item;
   }
-  return { prices, meta };
+
+  const missing = json.data?.missing ?? [];
+  for (const m of missing) {
+    console.warn(`oilpriceapi.com: ${m.code} tidak masuk "prices" (${m.reason}): ${m.message ?? "(tanpa pesan detail)"}`);
+  }
+
+  return { prices, meta, missing };
 }
 
 async function fetchKurs() {
@@ -91,7 +114,15 @@ async function main() {
   const dataPath = new URL("../data.json", import.meta.url);
   const data = JSON.parse(await fs.readFile(dataPath, "utf-8"));
 
-  const { prices, meta } = await fetchOilPrices();
+  // Brent diminta SENDIRIAN (lihat catatan perbaikan di atas) supaya
+  // freshness window-nya tidak tercampur dengan Dubai/Mogas yang window-nya
+  // jauh lebih ketat.
+  const [brentResult, restResult] = await Promise.all([
+    fetchOilPricesFor([BRENT_CODE]),
+    fetchOilPricesFor([DUBAI_CODE, MOGAS92_CODE]),
+  ]);
+  const prices = { ...brentResult.prices, ...restResult.prices };
+  const meta = { ...brentResult.meta, ...restResult.meta };
   const kurs = await fetchKurs();
 
   const brent = prices[BRENT_CODE];
@@ -100,7 +131,17 @@ async function main() {
   const mogas92Meta = meta[MOGAS92_CODE];
 
   if (brent == null) {
-    throw new Error("Brent tidak ditemukan di respons API -- cek nama kode & langganan akun.");
+    // Kalau sampai di sini Brent tetap tidak ada PADAHAL sudah diminta
+    // sendirian (window freshness-nya sendiri, bukan window Dubai/Mogas),
+    // ini kemungkinan besar masalah nyata (mis. EIA belum update lebih
+    // lama dari biasanya, atau memang soal kode/langganan) -- bukan lagi
+    // artefak dari request gabungan. Tetap gagalkan workflow (jangan diam-
+    // diam pakai data basi ke model), tapi dengan alasan asli dari API.
+    const missEntry = brentResult.missing.find((m) => m.code === BRENT_CODE);
+    const detail = missEntry
+      ? `alasan dari API: "${missEntry.reason}" -- ${missEntry.message ?? "(tanpa pesan)"} (terakhir terlihat ${missEntry.last_seen ?? "?"}, ${missEntry.days_stale ?? "?"} hari basi)`
+      : "tidak ada entri di data.missing untuk kode ini -- cek respons lengkap di log run ini";
+    throw new Error(`Brent tidak tersedia dari oilpriceapi.com meski diminta sendirian. ${detail}`);
   }
 
   // Mogas92 dari oilpriceapi adalah kontrak calendar-month average swap yang
