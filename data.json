@@ -1548,7 +1548,7 @@
     },
     {
       "month": "2026-09",
-      "icp": 109.92,
+      "icp": 111.84,
       "kurs": 17536,
       "pertamax_actual": {
         "jakarta": 15950,
@@ -1559,8 +1559,7 @@
         "sumut": 20000
       },
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-09-11T23:50:14.714Z",
-      "mogas92_live": 136.79
+      "updated_at": "2026-09-12T23:40:14.988Z"
     }
   ],
   "pbbkb_note": {
@@ -11358,6 +11357,11 @@
       "icp": 109.92,
       "kurs": 17536,
       "mogas92_live": 136.79
+    },
+    {
+      "date": "2026-09-12",
+      "icp": 111.84,
+      "kurs": 17536
     }
   ],
   "daily_note": "ICP harian = estimasi regresi Brent+Dubai (kalibrasi R2=0.985, lemah saat guncangan geopolitik ekstrem). Kurs harian = rata-rata Kurs Jual & Beli, data resmi Bank Indonesia (Kurs Transaksi). Histori penuh 2019-01-02 s/d 2026-09-08 sudah terisi; bulan berjalan lanjut ter-update otomatis oleh workflow."
