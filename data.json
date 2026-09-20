@@ -1548,7 +1548,7 @@
     },
     {
       "month": "2026-09",
-      "icp": 127.95,
+      "icp": 127.69,
       "kurs": 17753,
       "pertamax_actual": {
         "jakarta": 15950,
@@ -1559,7 +1559,7 @@
         "sumut": 20000
       },
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-09-19T23:50:52.803Z"
+      "updated_at": "2026-09-20T23:48:17.876Z"
     }
   ],
   "pbbkb_note": {
@@ -11389,6 +11389,11 @@
     {
       "date": "2026-09-19",
       "icp": 127.95,
+      "kurs": 17753
+    },
+    {
+      "date": "2026-09-20",
+      "icp": 127.69,
       "kurs": 17753
     }
   ],
