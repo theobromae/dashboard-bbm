@@ -56,13 +56,19 @@ function regimeConstant(monthStr, product) {
   return product === "ron92" ? 1800 : 2000;                     // Kepmen 62/2020
 }
 
-function hargaKeekonomian(icp, kurs, monthStr, product, mogas92Live) {
+function hargaKeekonomian(icp, kurs, monthStr, product, mogas92Live, mogas92Estimated) {
   const konst = regimeConstant(monthStr, product);
   let mops;
   if (product === "ron92" && mogas92Live != null) {
-    mops = mogas92Live; // harga Mogas92 live (oilpriceapi) -- lebih akurat dari ICP+crack
+    mops = mogas92Live; // harga Mogas92 live (oilpriceapi) -- paling akurat
+  } else if (product === "ron92" && mogas92Estimated != null) {
+    // Fallback rolling-average dari update-data.mjs: ICP hari itu + rata-rata
+    // selisih dari sampai 7 titik live terakhir yang valid -- dipakai kalau
+    // mogas92 live hari ini tidak tersedia/gugur sanity check, lebih baik
+    // drpd konstanta statis krn ikut bergeser sesuai crack spread terkini.
+    mops = mogas92Estimated;
   } else {
-    const crack = product === "ron92" ? 10.32 : 17.02; // rata-rata crack spread aktual (data historis)
+    const crack = product === "ron92" ? 10.32 : 17.02; // rata-rata crack spread aktual (data historis) -- fallback terakhir
     mops = icp + crack;
   }
   const rpPerLiter = (mops * kurs) / 159;
@@ -111,11 +117,11 @@ function dateRangeDays(startStr, endStr) {
   return out;
 }
 
-function getActualForDate(data, product, region, dateStr) {
+function getActualForDate(data, product, region, dateStr, monthlyMap) {
   const prodKey = product === "ron92" ? "pertamax" : "turbo";
   const field = product === "ron92" ? "pertamax_actual" : "turbo_actual";
   const month = dateStr.slice(0, 7);
-  const monthRow = data.monthly.find((r) => r.month === month);
+  const monthRow = monthlyMap ? monthlyMap.get(month) : data.monthly.find((r) => r.month === month);
   const monthValue = monthRow ? readActual(monthRow[field], region) : null;
 
   const changes = data.price_changes?.[prodKey]?.[region] || [];
@@ -134,18 +140,54 @@ function getActualForDate(data, product, region, dateStr) {
 
 function getIcpKursForDate(data, dateStr, dailyMap) {
   const dailyRow = dailyMap ? dailyMap.get(dateStr) : (data.daily || []).find((d) => d.date === dateStr);
-  if (dailyRow) return { icp: dailyRow.icp, kurs: dailyRow.kurs, mogas92_live: dailyRow.mogas92_live };
+  if (dailyRow) {
+    return {
+      icp: dailyRow.icp,
+      kurs: dailyRow.kurs,
+      mogas92_live: dailyRow.mogas92_live,
+      mogas92_estimated: dailyRow.mogas92_estimated,
+    };
+  }
   const month = dateStr.slice(0, 7);
   const monthRow = data.monthly.find((r) => r.month === month);
-  // PENTING: mogas92_live di baris bulanan cuma snapshot SATU hari tertentu
-  // (bukan rata-rata bulan) -- jangan dipakai utk tanggal lain yg kebetulan
-  // tidak punya entri "daily" sendiri, atau nilainya akan salah diulang di
-  // banyak tanggal berbeda. Fallback bulan hanya pakai ICP+kurs, MOPS RON92
-  // kembali ke estimasi ICP+crack seperti biasa.
-  return monthRow ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: null } : { icp: null, kurs: null };
+  // PENTING: mogas92_live/mogas92_estimated di baris bulanan cuma snapshot
+  // SATU hari tertentu (bukan rata-rata bulan) -- jangan dipakai utk tanggal
+  // lain yg kebetulan tidak punya entri "daily" sendiri, atau nilainya akan
+  // salah diulang di banyak tanggal berbeda. Fallback bulan hanya pakai
+  // ICP+kurs, MOPS RON92 kembali ke estimasi ICP+crack statis seperti biasa.
+  return monthRow
+    ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: null, mogas92_estimated: null }
+    : { icp: null, kurs: null };
+}
+
+// ------------------------------------------------------------
+// CACHE PERFORMA -- membangun timeline harian (~2.800+ baris x 2 produk)
+// dari nol itu mahal (puluhan-ratusan ms di HP), dan sebelumnya dilakukan
+// ULANG dari awal SETIAP kali tombol wilayah/resolusi diklik. Di sinilah
+// sebagian besar "processing time" INP berasal. Cache di bawah menyimpan
+// hasil per kombinasi (produk, wilayah) dan (produk, wilayah, resolusi),
+// dan hanya dihitung ulang saat data.json benar2 berubah (lihat
+// invalidatePerfCaches()).
+// ------------------------------------------------------------
+const dailyRawCache = new Map();   // key `${product}:${region}` -> baris harian mentah (belum diskor)
+const scoredCache = new Map();     // key `${product}:${region}:${resolution}` -> baris sudah diskor
+let monthlyMapCache = null;        // Map month -> row bulanan
+
+function getMonthlyMap(data) {
+  if (!monthlyMapCache) monthlyMapCache = new Map(data.monthly.map((r) => [r.month, r]));
+  return monthlyMapCache;
+}
+
+function invalidatePerfCaches() {
+  dailyRawCache.clear();
+  scoredCache.clear();
+  monthlyMapCache = null;
 }
 
 function buildDailyTimeline(data, product, region) {
+  const cacheKey = `${product}:${region}`;
+  if (dailyRawCache.has(cacheKey)) return dailyRawCache.get(cacheKey);
+
   const firstMonth = data.monthly[0].month;
   const startStr = `${firstMonth}-01`;
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -153,15 +195,19 @@ function buildDailyTimeline(data, product, region) {
   const endStr = lastDaily && lastDaily > todayStr ? lastDaily : todayStr;
 
   // Map sekali di awal -- jauh lebih cepat drpd .find() per hari saat
-  // data.daily sudah berisi ribuan baris (histori penuh 2019-2026).
+  // data.daily/data.monthly sudah berisi ribuan/puluhan baris.
   const dailyMap = new Map((data.daily || []).map((d) => [d.date, d]));
+  const monthlyMap = getMonthlyMap(data);
 
   const days = dateRangeDays(startStr, endStr);
-  return days.map((date) => {
-    const actual = getActualForDate(data, product, region, date);
-    const { icp, kurs, mogas92_live } = getIcpKursForDate(data, date, dailyMap);
-    return { date, actual, icp, kurs, mogas92_live };
+  const result = days.map((date) => {
+    const actual = getActualForDate(data, product, region, date, monthlyMap);
+    const { icp, kurs, mogas92_live, mogas92_estimated } = getIcpKursForDate(data, date, dailyMap);
+    return { date, actual, icp, kurs, mogas92_live, mogas92_estimated };
   }).filter((r) => r.actual != null && r.icp != null && r.kurs != null);
+
+  dailyRawCache.set(cacheKey, result);
+  return result;
 }
 
 function isoWeekKey(dateStr) {
@@ -182,15 +228,19 @@ function resampleWeekly(daily) {
     const avgIcp = items.reduce((s, i) => s + i.icp, 0) / items.length;
     const avgKurs = items.reduce((s, i) => s + i.kurs, 0) / items.length;
     const last = items[items.length - 1];
-    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, mogas92_live: last.mogas92_live, isEstimated: last.isEstimated };
+    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, mogas92_live: last.mogas92_live, mogas92_estimated: last.mogas92_estimated, isEstimated: last.isEstimated };
   });
 }
 
 function getTimelineForResolution(data, product, region, resolution, apbnData) {
   if (resolution === "bulanan") return null; // pakai jalur computeSeries yang sudah ada
+  const cacheKey = `${product}:${region}:${resolution}`;
+  if (scoredCache.has(cacheKey)) return scoredCache.get(cacheKey);
   const daily = buildDailyTimeline(data, product, region);
   const raw = resolution === "harian" ? daily : resampleWeekly(daily);
-  return scoreSeries(raw, product, apbnData, resolution);
+  const scored = scoreSeries(raw, product, apbnData, resolution);
+  scoredCache.set(cacheKey, scored);
+  return scored;
 }
 
 // Berapa "periode" setara 1 bulan kalender, dipakai utk menyesuaikan skala
@@ -210,7 +260,7 @@ function scoreSeries(baseRows, product, apbnData, resolution) {
 
   const rows = baseRows.map((r) => {
     const key = r.month || r.date;
-    const eco = hargaKeekonomian(r.icp, r.kurs, key.slice(0, 7), product, r.mogas92_live);
+    const eco = hargaKeekonomian(r.icp, r.kurs, key.slice(0, 7), product, r.mogas92_live, r.mogas92_estimated);
     const gapPct = ((eco - r.actual) / r.actual) * 100;
     return { ...r, eco, gapPct };
   });
@@ -276,7 +326,7 @@ function computeSeries(monthly, product, apbnData, region) {
     const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
     const actual = readActual(raw, region);
     const isEstimated = region !== "jakarta" && !!r.sumut_estimated?.[estKey];
-    return { month: r.month, icp: r.icp, kurs: r.kurs, mogas92_live: r.mogas92_live, actual, isEstimated };
+    return { month: r.month, icp: r.icp, kurs: r.kurs, mogas92_live: r.mogas92_live, mogas92_estimated: r.mogas92_estimated, actual, isEstimated };
   });
   return scoreSeries(baseRows, product, apbnData, "bulanan");
 }
@@ -371,6 +421,8 @@ function renderChart(canvasId, rows, label, color) {
           pointRadius: 0,
           tension: 0.15,
           yAxisID: "y",
+          parsing: false,
+          normalized: true,
         },
         {
           label: `${label} - Keekonomian (estimasi)`,
@@ -381,6 +433,8 @@ function renderChart(canvasId, rows, label, color) {
           pointRadius: 0,
           tension: 0.15,
           yAxisID: "y",
+          parsing: false,
+          normalized: true,
         },
         {
           label: "ICP (US$/barel)",
@@ -390,15 +444,23 @@ function renderChart(canvasId, rows, label, color) {
           pointRadius: 0,
           tension: 0.15,
           yAxisID: "y1",
+          parsing: false,
+          normalized: true,
         },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      // Data sudah pre-sorted numerik (x = index 0..n-1) & sudah "parsed"
+      // ({x,y} langsung) -- animation:false + decimation menghemat banyak
+      // waktu render terutama di resolusi harian (ribuan titik) & saat
+      // zoom/pan di HP.
+      animation: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
         legend: { labels: { color: "#e8ecf5", boxWidth: 14, font: { size: 11 } } },
+        decimation: { enabled: true, algorithm: "min-max", samples: 500 },
         tooltip: {
           mode: "index",
           intersect: false,
@@ -443,14 +505,17 @@ function renderChart(canvasId, rows, label, color) {
   });
 }
 
-function renderTable(tbodyId, rows, showAll) {
+function renderTable(tbodyId, rows, showAll, limit) {
   const tbody = document.getElementById(tbodyId);
   if (!rows || !rows.length) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted)">Belum ada data histori untuk wilayah ini</td></tr>`;
     return;
   }
-  const displayRows = showAll ? rows : rows.slice(-12);
-  tbody.innerHTML = displayRows
+  const displayRows = showAll ? rows : rows.slice(-(limit ?? 12));
+  // Tampilkan dari yang TERBARU ke yang terlama (baris asal tetap kronologis
+  // menaik krn dipakai utk hitung durasi/momentum -- ini cuma urutan tampil).
+  const reversedRows = [...displayRows].reverse();
+  tbody.innerHTML = reversedRows
     .map(
       (r) => `
     <tr>
@@ -525,12 +590,23 @@ function renderAll(region, resolution) {
   });
 }
 
+// Update tampilan tombol SEGERA (synchronous, dalam handler klik) supaya
+// browser bisa langsung menggambar frame itu, lalu kerja berat (hitung
+// timeline + gambar chart + isi tabel) ditunda ke frame berikutnya lewat
+// requestAnimationFrame. Ini yang paling menentukan skor INP: bagian
+// "processing" yang benar2 terjadi SAAT event klik jadi sangat kecil.
 function setupRegionSwitch() {
   document.querySelectorAll(".region-btn").forEach((btn) => {
-    btn.addEventListener("click", () => renderAll(btn.dataset.region, currentResolution));
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".region-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      requestAnimationFrame(() => renderAll(btn.dataset.region, currentResolution));
+    });
   });
   document.querySelectorAll(".res-btn").forEach((btn) => {
-    btn.addEventListener("click", () => renderAll(currentRegion, btn.dataset.res));
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".res-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      requestAnimationFrame(() => renderAll(currentRegion, btn.dataset.res));
+    });
   });
   document.querySelectorAll(".reset-zoom-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -658,6 +734,7 @@ function setupUpdateForm() {
       setToken(token);
       const updatedData = await commitPriceUpdate({ token, product, region, date, price });
       dashboardData = updatedData;
+      invalidatePerfCaches(); // data.json berubah -> cache timeline lama sudah tidak valid
       renderAll(currentRegion, currentResolution);
       statusEl.textContent = `Berhasil! ${date} disimpan ke GitHub. Situs akan ikut ter-update dalam 1-2 menit.`;
       statusEl.className = "status-ok";
@@ -688,11 +765,21 @@ function applyDateFilter(rows) {
   });
 }
 
+// Default baris yang ditampilkan kalau TIDAK ada filter tanggal aktif.
+// PENTING: sebelumnya resolusi harian/mingguan menampilkan SEMUA baris
+// (bisa >2.800 <tr> x 2 tabel) pada SETIAP klik tombol -- ini penyumbang
+// terbesar processing time (INP) di HP. Sekarang dibatasi seperti halnya
+// tampilan bulanan (12 bulan terakhir); histori penuh tetap bisa dilihat
+// lewat Filter Riwayat di atas.
+const TABLE_DEFAULT_LIMIT = { bulanan: 12, mingguan: 26, harian: 90 };
+
 function refreshTables() {
   const filtered92 = applyDateFilter(lastRows.ron92);
   const filtered98 = applyDateFilter(lastRows.ron98);
-  renderTable("table-pertamax", filtered92 ?? lastRows.ron92, filtered92 != null || currentResolution !== "bulanan");
-  renderTable("table-turbo", filtered98 ?? lastRows.ron98, filtered98 != null || currentResolution !== "bulanan");
+  const hasDateFilter = filtered92 != null;
+  const limit = TABLE_DEFAULT_LIMIT[currentResolution] ?? 12;
+  renderTable("table-pertamax", filtered92 ?? lastRows.ron92, hasDateFilter, limit);
+  renderTable("table-turbo", filtered98 ?? lastRows.ron98, hasDateFilter, limit);
 }
 
 function setupDateFilter() {
@@ -713,6 +800,7 @@ async function main() {
   await waitForChart();
   const res = await fetch("data.json");
   dashboardData = await res.json();
+  invalidatePerfCaches();
 
   setupRegionSwitch();
   setupUpdateForm();
