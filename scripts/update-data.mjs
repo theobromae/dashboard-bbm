@@ -32,6 +32,25 @@
 // dibuang ke data.missing dan dianggap "tidak ditemukan" oleh
 // script lama. Memisahkan request Brent membuatnya dievaluasi
 // dengan freshness window yang sesuai sumbernya sendiri.
+//
+// CATATAN PERBAIKAN (2026-09-17):
+// Sanity check lama untuk mogas92 (`mogas92 < brent * 2`) cuma
+// menangkap batas ATAS (kontrak stale yg kemahalan, mis. $214).
+// Ketidakwajaran versi BAWAH lolos begitu saja -- 2026-09-17
+// mogas92_live sempat tersimpan $69.65 padahal ICP hari itu
+// $128.67 (gasoline lebih murah dari minyak mentahnya sendiri,
+// mustahil secara ekonomi/crack spread). Dua perbaikan:
+//   1. Tambah batas bawah: mogas92 harus > brent.
+//   2. Tambah sanity check dinamis berbasis rolling window: kalau
+//      selisih (mogas92 - ICP) hari ini menyimpang >3 standar
+//      deviasi dari rata-rata 7 titik live terakhir, dianggap
+//      outlier dan dibuang.
+// Kalau mogas92 hari ini tidak tersedia/tidak lolos sanity check,
+// fallback-nya sekarang bukan lagi konstanta statis, tapi
+// ICP hari ini + rata-rata selisih dari sampai 7 titik live
+// terakhir yang valid (disimpan sebagai mogas92_estimated,
+// terpisah dari mogas92_live supaya frontend & pembaca data.json
+// bisa bedakan mana angka live vs estimasi).
 // ============================================================
 
 const MOGAS92_CODE = "SINGAPORE_MOGAS_92_USD"; // dikonfirmasi dari respons live API
@@ -49,6 +68,29 @@ const ICP_MODEL = { a: 0.7575, b: 0.2887, c: -4.722 };
 const ICP_MODEL_BRENT_ONLY = { a: 1.045, c: -5.00 };
 
 const CRACK_SPREAD_RON98 = 17.02; // hasil riset & backtest sebelumnya
+
+// Berapa titik live terakhir yang dipakai untuk rolling-average fallback &
+// sanity check dinamis mogas92. Butuh minimal 3 titik sebelum dipakai --
+// di bawah itu, sample terlalu kecil untuk dipercaya (mean/std tidak stabil).
+const ROLLING_WINDOW = 7;
+const MIN_ROLLING_POINTS = 3;
+const OUTLIER_Z_THRESHOLD = 3;
+
+// Ambil sampai N titik terakhir di data.daily di mana mogas92_live "hidup"
+// (bukan hasil estimasi run sebelumnya) dan icp ada, urut dari yang terbaru.
+function getRecentLiveSpreads(dailyArr, n = ROLLING_WINDOW) {
+  return [...dailyArr]
+    .filter((d) => typeof d.mogas92_live === "number" && typeof d.icp === "number")
+    .sort((a, b) => (a.date < b.date ? 1 : -1)) // terbaru dulu
+    .slice(0, n)
+    .map((d) => ({ date: d.date, spread: d.mogas92_live - d.icp }));
+}
+
+function meanStd(values) {
+  const mean = values.reduce((s, v) => s + v, 0) / values.length;
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length;
+  return { mean, std: Math.sqrt(variance) };
+}
 
 // Fetch satu atau lebih kode dari oilpriceapi.com dalam SATU request.
 // Kode yang tergolong "stale" menurut freshness window request ini akan
@@ -144,24 +186,61 @@ async function main() {
     throw new Error(`Brent tidak tersedia dari oilpriceapi.com meski diminta sendirian. ${detail}`);
   }
 
-  // Mogas92 dari oilpriceapi adalah kontrak calendar-month average swap yang
-  // kadang stale/tidak wajar (pernah dapat $214/barel saat status "stale").
-  // Hanya pakai sebagai MOPS langsung kalau data_status="current" DAN dalam
-  // rentang harga wajar (di bawah 2x Brent, penyaring sanity check kasar).
-  const mogas92Usable =
-    mogas92 != null &&
-    mogas92Meta?.data_status === "current" &&
-    mogas92 < brent * 2;
-  if (mogas92 != null && !mogas92Usable) {
-    console.warn(
-      `Mogas92 diabaikan (data_status=${mogas92Meta?.data_status}, harga=${mogas92}) -- pakai fallback ICP+crack untuk bulan ini.`
-    );
-  }
-
   const icpEstimate =
     dubai != null
       ? ICP_MODEL.a * brent + ICP_MODEL.b * dubai + ICP_MODEL.c
       : ICP_MODEL_BRENT_ONLY.a * brent + ICP_MODEL_BRENT_ONLY.c;
+
+  // Rolling window dari titik-titik live terakhir (histori data.daily,
+  // sebelum entri hari ini ditambahkan). Dipakai untuk (a) sanity check
+  // dinamis di bawah, dan (b) basis fallback kalau mogas92 hari ini
+  // tidak dipakai.
+  const recentSpreads = getRecentLiveSpreads(data.daily);
+  const rollingSpread =
+    recentSpreads.length >= MIN_ROLLING_POINTS
+      ? { ...meanStd(recentSpreads.map((p) => p.spread)), n: recentSpreads.length }
+      : null;
+
+  // Mogas92 dari oilpriceapi adalah kontrak calendar-month average swap yang
+  // kadang stale/tidak wajar (pernah dapat $214/barel saat status "stale",
+  // dan pernah $69.65 saat ICP $128.67 -- gasoline lebih murah dari crude-nya
+  // sendiri, mustahil). Sanity check tiga lapis:
+  //   1. data_status harus "current"
+  //   2. harus di antara brent < mogas92 < brent*2 (batas atas & bawah wajar
+  //      untuk sebuah crack spread positif)
+  //   3. kalau histori rolling cukup, selisih ke ICP tidak boleh >3 standar
+  //      deviasi dari rata-rata 7 titik live terakhir
+  let mogas92Usable =
+    mogas92 != null &&
+    mogas92Meta?.data_status === "current" &&
+    mogas92 > brent &&
+    mogas92 < brent * 2;
+
+  if (mogas92Usable && rollingSpread && rollingSpread.std > 0) {
+    const todaySpread = mogas92 - icpEstimate;
+    const z = Math.abs(todaySpread - rollingSpread.mean) / rollingSpread.std;
+    if (z > OUTLIER_Z_THRESHOLD) {
+      console.warn(
+        `Mogas92=${mogas92} diabaikan: selisih ke ICP (${todaySpread.toFixed(2)}) menyimpang ${z.toFixed(1)}sigma dari rata-rata ${rollingSpread.n} titik live terakhir (${rollingSpread.mean.toFixed(2)} +/- ${rollingSpread.std.toFixed(2)}).`
+      );
+      mogas92Usable = false;
+    }
+  }
+
+  if (mogas92 != null && !mogas92Usable) {
+    console.warn(
+      `Mogas92 diabaikan (data_status=${mogas92Meta?.data_status}, harga=${mogas92}) -- pakai fallback rolling-average utk hari ini.`
+    );
+  }
+
+  // Fallback: ICP hari ini + rata-rata selisih dari titik live terakhir yang
+  // valid (bukan lagi konstanta statis). Kalau histori live belum cukup
+  // (<3 titik), TIDAK ada fallback -- lebih baik kosong daripada estimasi
+  // dari sample yang terlalu kecil untuk dipercaya.
+  const mogas92Estimated =
+    !mogas92Usable && rollingSpread
+      ? Math.round((icpEstimate + rollingSpread.mean) * 100) / 100
+      : null;
 
   const now = new Date();
   const dateKey = now.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -175,7 +254,12 @@ async function main() {
     icp: Math.round(icpEstimate * 100) / 100,
     kurs: Math.round(kurs),
   };
-  if (mogas92Usable) dailyRow.mogas92_live = Math.round(mogas92 * 100) / 100;
+  if (mogas92Usable) {
+    dailyRow.mogas92_live = Math.round(mogas92 * 100) / 100;
+  } else if (mogas92Estimated != null) {
+    dailyRow.mogas92_estimated = mogas92Estimated;
+    dailyRow.mogas92_estimated_n = rollingSpread.n;
+  }
   const existingDailyIdx = data.daily.findIndex((d) => d.date === dateKey);
   if (existingDailyIdx >= 0) data.daily[existingDailyIdx] = dailyRow;
   else data.daily.push(dailyRow);
@@ -200,14 +284,28 @@ async function main() {
   row.kurs = Math.round(kurs);
   if (mogas92Usable) {
     row.mogas92_live = Math.round(mogas92 * 100) / 100; // dipakai app.js sbg MOPS RON92 langsung, prioritas di atas ICP+crack
+    delete row.mogas92_estimated;
+    delete row.mogas92_estimated_n;
   } else {
     delete row.mogas92_live; // pastikan tidak ada nilai basi/aneh yang nyangkut dari run sebelumnya
+    if (mogas92Estimated != null) {
+      row.mogas92_estimated = mogas92Estimated; // fallback rolling-average, BUKAN live -- app.js perlu bedakan
+      row.mogas92_estimated_n = rollingSpread.n;
+    } else {
+      delete row.mogas92_estimated;
+      delete row.mogas92_estimated_n;
+    }
   }
   row.updated_via = "oilpriceapi+frankfurter";
   row.updated_at = now.toISOString();
 
   await fs.writeFile(dataPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
-  console.log(`Updated ${dateKey} (bulan ${monthKey}): ICP~${dailyRow.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${dailyRow.kurs}, mogas92_live=${dailyRow.mogas92_live ?? "n/a (fallback ke ICP+crack)"}. Total snapshot harian: ${data.daily.length}.`);
+  console.log(
+    `Updated ${dateKey} (bulan ${monthKey}): ICP~${dailyRow.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${dailyRow.kurs}, ` +
+      `mogas92_live=${dailyRow.mogas92_live ?? "n/a"}, mogas92_estimated=${dailyRow.mogas92_estimated ?? "n/a"}` +
+      `${dailyRow.mogas92_estimated != null ? ` (dari ${dailyRow.mogas92_estimated_n} titik live terakhir)` : ""}. ` +
+      `Total snapshot harian: ${data.daily.length}.`
+  );
 }
 
 main().catch((err) => {
