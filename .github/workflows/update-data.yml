@@ -2,8 +2,8 @@ name: Update BBM dashboard data
 
 on:
   schedule:
-    # Tiap hari jam 05:00 WIB (22:00 UTC hari sebelumnya)
-    - cron: "0 22 * * *"
+    # Tiap hari jam 07:00 WIB (00:00 UTC)
+    - cron: "0 0 * * *"
   workflow_dispatch: {} # tombol "Run workflow" manual di tab Actions
 
 permissions:
