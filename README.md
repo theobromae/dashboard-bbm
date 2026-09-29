@@ -49,7 +49,36 @@ R²=0,985, RMSE≈US$2,55/barel. Formula ini sudah diterapkan di `update-data.mj
 - **Pertamax**: ambang gap 31%, recall 50%, presisi 100% (n=6 bulan merah) — CI presisi perlu dibaca hati-hati karena sample kecil (lihat diskusi bootstrap).
 - **Pertamax Turbo**: ambang gap 20%, recall 75%, presisi 80% (n=10 bulan merah).
 - Bobot & ambang lengkap ada di `WEIGHTS` (`app.js`), terpisah per produk.
-- `data.json` sudah diisi `mogas92_live` untuk bulan-bulan yang punya data pasar riil historis (Sep 2022 - Ags 2024, Jun 2026) dari kontrak TradingView X01/1NA1 — field ini otomatis diprioritaskan dibanding estimasi ICP+crack.
+- `data.json` sudah diisi `mogas92_hist` / `mogas97_hist` untuk bulan & hari yang punya data pasar riil historis (Sep 2022 - Ags 2024, Jun 2026) dari TradingView DCB1+1NA1 / X01 — field ini otomatis diprioritaskan dibanding estimasi.
+
+## MOPS Pertamax Turbo: Mogas 92 + rerata gap 97-92 (sejak 2026-09-29)
+
+Sebelumnya MOPS RON98 dihitung `ICP + 17,02` (crack spread X01 − ICP). Cara ini bisa membuat harga keekonomian Turbo **lebih rendah** dari Pertamax ketika Mogas 92 live naik tajam tapi ICP tidak (contoh Sep 2026: Mogas 92 ≈ US$136 vs ICP + 17,02 ≈ US$132).
+
+Sekarang:
+
+- **MOPS RON92** = `mogas92_live` (oilpriceapi) → `mogas92_hist` (TradingView, Dubai + 1NA1) → `mogas92_estimated` → `ICP + 10,32`
+- **MOPS RON98** = `mogas97_hist` (TradingView X01) kalau ada, selain itu **MOPS RON92 + rerata gap 97-92**
+- Rerata gap disimpan di `data.json → mogas_gap_97_92` (saat ini **US$5,66/bbl**, median 5,46, std 1,27, dari 430 hari data Sep 2022 – Ags 2024 & Jun 2026)
+
+Backtest prediksi harga Mogas 97 harian (US$/bbl):
+
+| Metode | MAE semua data | MAE out-of-sample 2024 |
+|---|---|---|
+| Mogas 92 + rerata gap | **0,87** | **0,86** |
+| ICP + crack98 (lama) | 5,20 | 4,79 |
+
+Recall/presisi peringatan dini tidak berubah (Pertamax 2/4 & 6/6, Turbo 3/4 & 8/10), tapi inversi Turbo < Pertamax hilang di semua bulan & hari.
+
+Histori Mogas 92/97 dari CSV TradingView di `data/raw/` diisi ke `data.json` (field `mogas92_hist` / `mogas97_hist`, bulanan & harian) lewat:
+
+```
+python3 scripts/backfill_mogas_history.py
+```
+
+Jalankan ulang setiap CSV di `data/raw/` diperbarui (gap ikut dihitung ulang). Workflow harian kini juga menyimpan `mogas97_estimated` (Mogas 92 hari itu + gap).
+
+**Catatan:** gap sempat menyempit ke ~2,7 pada awal Juni 2026 (hanya 7 hari data). Kalau data TradingView terbaru sudah bisa diekspor, sebaiknya dicek apakah rerata rolling lebih cocok daripada rerata seluruh histori.
 
 ## Keterbatasan yang perlu diketahui
 

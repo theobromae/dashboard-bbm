@@ -15,8 +15,12 @@
       format: { "2019": 60, "2020": 63, ... }
    4. Commit & push -- GitHub Pages otomatis update.
 
-   KALIBRASI PER PRODUK (hasil backtest 93 bulan, 2019-2026, dengan crack
-   spread aktual RON92=10,32 dan RON98=17,02 dari data historis):
+   MOPS (2026-09-29): RON92 = Mogas 92 live/historis, fallback ICP + 10,32.
+   RON98 = Mogas 97 historis (X01) kalau ada, selain itu MOPS RON92 +
+   rerata gap 97-92 (data.json -> mogas_gap_97_92). Crack spread RON98
+   lama (ICP + 17,02) sudah tidak dipakai.
+
+   KALIBRASI PER PRODUK (hasil backtest 93 bulan, 2019-2026):
    Pertamax (RON92) lebih dipengaruhi diskresi politik -- gap-nya bisa
    dibiarkan besar berbulan-bulan sebelum harga benar2 disesuaikan, jadi
    bobot "durasi tertahan" dinaikkan dan ambang lebih tinggi. Backtest:
@@ -56,21 +60,43 @@ function regimeConstant(monthStr, product) {
   return product === "ron92" ? 1800 : 2000;                     // Kepmen 62/2020
 }
 
-function hargaKeekonomian(icp, kurs, monthStr, product, mogas92Live, mogas92Estimated) {
+// Crack spread RON92 rata-rata (1NA1) -- fallback terakhir kalau tidak ada
+// harga Mogas 92 sama sekali (histori 2019-2022 & Sep 2024 - Mei 2026).
+const CRACK_SPREAD_RON92 = 10.32;
+
+// Rerata selisih Mogas 97 - Mogas 92 (US$/bbl). Nilai resmi dibaca dari
+// data.json -> mogas_gap_97_92.value (dihitung scripts/backfill_mogas_history.py,
+// 430 hari data TradingView). Angka di bawah hanya default kalau field itu
+// tidak ada. Menggantikan crack spread RON98 lama (ICP + 17,02) yang
+// MAE-nya ~5,2 US$/bbl vs ~0,87 US$/bbl untuk metode gap ini, dan yang
+// bisa membuat harga keekonomian Turbo < Pertamax saat ICP & Mogas92
+// bergerak tidak searah.
+let GAP_97_92 = 5.66;
+
+// MOPS RON92 (US$/bbl), urutan prioritas:
+//   1. mogas92_live      -- oilpriceapi (hari/bulan berjalan)
+//   2. mogas92_hist      -- histori TradingView (Dubai + 1NA1)
+//   3. mogas92_estimated -- fallback rolling-average dari update-data.mjs
+//   4. ICP + crack spread RON92 rata-rata
+function mopsRon92(r) {
+  if (r.mogas92_live != null) return r.mogas92_live;
+  if (r.mogas92_hist != null) return r.mogas92_hist;
+  if (r.mogas92_estimated != null) return r.mogas92_estimated;
+  return r.icp + CRACK_SPREAD_RON92;
+}
+
+// MOPS RON98 (US$/bbl): harga Mogas 97 historis kalau ada (X01), selain
+// itu MOPS RON92 + rerata gap 97-92.
+function mopsRon98(r) {
+  if (r.mogas97_hist != null) return r.mogas97_hist;
+  return mopsRon92(r) + GAP_97_92;
+}
+
+// r = baris {icp, kurs, mogas92_live, mogas92_hist, mogas92_estimated, mogas97_hist}
+function hargaKeekonomian(r, monthStr, product) {
   const konst = regimeConstant(monthStr, product);
-  let mops;
-  if (product === "ron92" && mogas92Live != null) {
-    mops = mogas92Live; // harga Mogas92 live (oilpriceapi) -- paling akurat
-  } else if (product === "ron92" && mogas92Estimated != null) {
-    // Fallback rolling-average dari update-data.mjs: ICP hari itu + rata-rata
-    // selisih dari sampai 7 titik live terakhir yang valid -- dipakai kalau
-    // mogas92 live hari ini tidak tersedia/gugur sanity check, lebih baik
-    // drpd konstanta statis krn ikut bergeser sesuai crack spread terkini.
-    mops = mogas92Estimated;
-  } else {
-    const crack = product === "ron92" ? 10.32 : 17.02; // rata-rata crack spread aktual (data historis) -- fallback terakhir
-    mops = icp + crack;
-  }
+  const mops = product === "ron92" ? mopsRon92(r) : mopsRon98(r);
+  const kurs = r.kurs;
   const rpPerLiter = (mops * kurs) / 159;
   const hargaDasar = (rpPerLiter + konst) / 0.9; // margin 10% dari harga dasar (batas atas)
   return hargaDasar * 1.15;                        // + PPN & PBBKB (estimasi ~15%)
@@ -145,7 +171,9 @@ function getIcpKursForDate(data, dateStr, dailyMap) {
       icp: dailyRow.icp,
       kurs: dailyRow.kurs,
       mogas92_live: dailyRow.mogas92_live,
+      mogas92_hist: dailyRow.mogas92_hist,
       mogas92_estimated: dailyRow.mogas92_estimated,
+      mogas97_hist: dailyRow.mogas97_hist,
     };
   }
   const month = dateStr.slice(0, 7);
@@ -154,7 +182,8 @@ function getIcpKursForDate(data, dateStr, dailyMap) {
   // SATU hari tertentu (bukan rata-rata bulan) -- jangan dipakai utk tanggal
   // lain yg kebetulan tidak punya entri "daily" sendiri, atau nilainya akan
   // salah diulang di banyak tanggal berbeda. Fallback bulan hanya pakai
-  // ICP+kurs, MOPS RON92 kembali ke estimasi ICP+crack statis seperti biasa.
+  // ICP+kurs, MOPS RON92 kembali ke estimasi ICP+crack statis seperti biasa
+  // (dan RON98 = itu + gap 97-92).
   return monthRow
     ? { icp: monthRow.icp, kurs: monthRow.kurs, mogas92_live: null, mogas92_estimated: null }
     : { icp: null, kurs: null };
@@ -202,8 +231,8 @@ function buildDailyTimeline(data, product, region) {
   const days = dateRangeDays(startStr, endStr);
   const result = days.map((date) => {
     const actual = getActualForDate(data, product, region, date, monthlyMap);
-    const { icp, kurs, mogas92_live, mogas92_estimated } = getIcpKursForDate(data, date, dailyMap);
-    return { date, actual, icp, kurs, mogas92_live, mogas92_estimated };
+    const m = getIcpKursForDate(data, date, dailyMap);
+    return { date, actual, ...m };
   }).filter((r) => r.actual != null && r.icp != null && r.kurs != null);
 
   dailyRawCache.set(cacheKey, result);
@@ -228,7 +257,12 @@ function resampleWeekly(daily) {
     const avgIcp = items.reduce((s, i) => s + i.icp, 0) / items.length;
     const avgKurs = items.reduce((s, i) => s + i.kurs, 0) / items.length;
     const last = items[items.length - 1];
-    return { date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs, mogas92_live: last.mogas92_live, mogas92_estimated: last.mogas92_estimated, isEstimated: last.isEstimated };
+    return {
+      date: weekStart, actual: last.actual, icp: avgIcp, kurs: avgKurs,
+      mogas92_live: last.mogas92_live, mogas92_hist: last.mogas92_hist,
+      mogas92_estimated: last.mogas92_estimated, mogas97_hist: last.mogas97_hist,
+      isEstimated: last.isEstimated,
+    };
   });
 }
 
@@ -260,7 +294,7 @@ function scoreSeries(baseRows, product, apbnData, resolution) {
 
   const rows = baseRows.map((r) => {
     const key = r.month || r.date;
-    const eco = hargaKeekonomian(r.icp, r.kurs, key.slice(0, 7), product, r.mogas92_live, r.mogas92_estimated);
+    const eco = hargaKeekonomian(r, key.slice(0, 7), product);
     const gapPct = ((eco - r.actual) / r.actual) * 100;
     return { ...r, eco, gapPct };
   });
@@ -326,7 +360,12 @@ function computeSeries(monthly, product, apbnData, region) {
     const raw = product === "ron92" ? r.pertamax_actual : r.turbo_actual;
     const actual = readActual(raw, region);
     const isEstimated = region !== "jakarta" && !!r.sumut_estimated?.[estKey];
-    return { month: r.month, icp: r.icp, kurs: r.kurs, mogas92_live: r.mogas92_live, mogas92_estimated: r.mogas92_estimated, actual, isEstimated };
+    return {
+      month: r.month, icp: r.icp, kurs: r.kurs,
+      mogas92_live: r.mogas92_live, mogas92_hist: r.mogas92_hist,
+      mogas92_estimated: r.mogas92_estimated, mogas97_hist: r.mogas97_hist,
+      actual, isEstimated,
+    };
   });
   return scoreSeries(baseRows, product, apbnData, "bulanan");
 }
@@ -800,6 +839,7 @@ async function main() {
   await waitForChart();
   const res = await fetch("data.json");
   dashboardData = await res.json();
+  if (typeof dashboardData.mogas_gap_97_92?.value === "number") GAP_97_92 = dashboardData.mogas_gap_97_92.value;
   invalidatePerfCaches();
 
   setupRegionSwitch();

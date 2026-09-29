@@ -67,7 +67,12 @@ const ICP_MODEL = { a: 0.7575, b: 0.2887, c: -4.722 };
 // lebih rendah tapi tetap solid) -- dipakai jg utk rekonstruksi histori 2019-2026.
 const ICP_MODEL_BRENT_ONLY = { a: 1.045, c: -5.00 };
 
-const CRACK_SPREAD_RON98 = 17.02; // hasil riset & backtest sebelumnya
+// Rerata selisih Mogas 97 - Mogas 92 (US$/bbl), dipakai utk memproyeksikan
+// MOPS Pertamax Turbo dari Mogas 92. Nilai resmi dibaca dari data.json
+// (mogas_gap_97_92.value, hasil scripts/backfill_mogas_history.py); angka
+// ini cuma default. Menggantikan CRACK_SPREAD_RON98 = 17.02 (ICP + crack)
+// yg lama -- lihat catatan perbaikan 2026-09-29 di README.
+const DEFAULT_GAP_97_92 = 5.66;
 
 // Berapa titik live terakhir yang dipakai untuk rolling-average fallback &
 // sanity check dinamis mogas92. Butuh minimal 3 titik sebelum dipakai --
@@ -260,6 +265,10 @@ async function main() {
     dailyRow.mogas92_estimated = mogas92Estimated;
     dailyRow.mogas92_estimated_n = rollingSpread.n;
   }
+  const gap9792 = typeof data.mogas_gap_97_92?.value === "number" ? data.mogas_gap_97_92.value : DEFAULT_GAP_97_92;
+  const mogas92ForTurbo = dailyRow.mogas92_live ?? dailyRow.mogas92_estimated;
+  if (mogas92ForTurbo != null) dailyRow.mogas97_estimated = Math.round((mogas92ForTurbo + gap9792) * 100) / 100;
+
   const existingDailyIdx = data.daily.findIndex((d) => d.date === dateKey);
   if (existingDailyIdx >= 0) data.daily[existingDailyIdx] = dailyRow;
   else data.daily.push(dailyRow);
@@ -296,13 +305,16 @@ async function main() {
       delete row.mogas92_estimated_n;
     }
   }
+  if (dailyRow.mogas97_estimated != null) row.mogas97_estimated = dailyRow.mogas97_estimated;
+  else delete row.mogas97_estimated;
   row.updated_via = "oilpriceapi+frankfurter";
   row.updated_at = now.toISOString();
 
   await fs.writeFile(dataPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
   console.log(
     `Updated ${dateKey} (bulan ${monthKey}): ICP~${dailyRow.icp} (Brent=${brent}, Dubai=${dubai}), kurs=${dailyRow.kurs}, ` +
-      `mogas92_live=${dailyRow.mogas92_live ?? "n/a"}, mogas92_estimated=${dailyRow.mogas92_estimated ?? "n/a"}` +
+      `mogas92_live=${dailyRow.mogas92_live ?? "n/a"}, mogas92_estimated=${dailyRow.mogas92_estimated ?? "n/a"}, ` +
+      `mogas97_estimated=${dailyRow.mogas97_estimated ?? "n/a"}` +
       `${dailyRow.mogas92_estimated != null ? ` (dari ${dailyRow.mogas92_estimated_n} titik live terakhir)` : ""}. ` +
       `Total snapshot harian: ${data.daily.length}.`
   );
