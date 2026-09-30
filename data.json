@@ -1573,8 +1573,8 @@
     },
     {
       "month": "2026-09",
-      "icp": 115.54,
-      "kurs": 17965,
+      "icp": 115.24,
+      "kurs": 17998,
       "pertamax_actual": {
         "jakarta": 15950,
         "sumut": 16300
@@ -1584,9 +1584,9 @@
         "sumut": 20000
       },
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-09-29T03:21:04.712Z",
-      "mogas92_live": 136.12,
-      "mogas97_estimated": 141.78
+      "updated_at": "2026-09-30T03:03:19.834Z",
+      "mogas92_live": 136.11,
+      "mogas97_estimated": 141.77
     }
   ],
   "pbbkb_note": {
@@ -6858,7 +6858,7 @@
       "icp": 94.8,
       "kurs": 15596,
       "mogas92_hist": 90.62,
-      "mogas97_hist": 97.0
+      "mogas97_hist": 97
     },
     {
       "date": "2022-11-02",
@@ -7176,7 +7176,7 @@
       "date": "2023-01-11",
       "icp": 80.66,
       "kurs": 15589,
-      "mogas92_hist": 92.0,
+      "mogas92_hist": 92,
       "mogas97_hist": 97.08
     },
     {
@@ -7484,7 +7484,7 @@
       "date": "2023-03-15",
       "icp": 73.93,
       "kurs": 15380,
-      "mogas92_hist": 93.0,
+      "mogas92_hist": 93,
       "mogas97_hist": 98.73
     },
     {
@@ -7569,7 +7569,7 @@
       "icp": 84.45,
       "kurs": 14990,
       "mogas92_hist": 99.87,
-      "mogas97_hist": 104.0
+      "mogas97_hist": 104
     },
     {
       "date": "2023-04-05",
@@ -7814,7 +7814,7 @@
       "icp": 74.82,
       "kurs": 14888,
       "mogas92_hist": 87.94,
-      "mogas97_hist": 95.0
+      "mogas97_hist": 95
     },
     {
       "date": "2023-06-07",
@@ -8002,7 +8002,7 @@
       "date": "2023-07-18",
       "icp": 78.59,
       "kurs": 15007,
-      "mogas92_hist": 92.0,
+      "mogas92_hist": 92,
       "mogas97_hist": 99.51
     },
     {
@@ -8136,7 +8136,7 @@
       "icp": 84.67,
       "kurs": 15323,
       "mogas92_hist": 100.77,
-      "mogas97_hist": 108.0
+      "mogas97_hist": 108
     },
     {
       "date": "2023-08-16",
@@ -8150,7 +8150,7 @@
       "icp": 84.52,
       "kurs": 15308,
       "mogas92_hist": 100.75,
-      "mogas97_hist": 108.0
+      "mogas97_hist": 108
     },
     {
       "date": "2023-08-21",
@@ -8366,7 +8366,7 @@
       "date": "2023-10-03",
       "icp": 91.3,
       "kurs": 15519,
-      "mogas92_hist": 93.0,
+      "mogas92_hist": 93,
       "mogas97_hist": 99.53
     },
     {
@@ -8555,7 +8555,7 @@
       "date": "2023-11-09",
       "icp": 80.07,
       "kurs": 15629,
-      "mogas92_hist": 91.0,
+      "mogas92_hist": 91,
       "mogas97_hist": 97.19
     },
     {
@@ -8723,7 +8723,7 @@
       "date": "2023-12-13",
       "icp": 73.48,
       "kurs": 15631,
-      "mogas92_hist": 85.0,
+      "mogas92_hist": 85,
       "mogas97_hist": 90.21
     },
     {
@@ -8822,7 +8822,7 @@
       "icp": 77.66,
       "kurs": 15525,
       "mogas92_hist": 87.6,
-      "mogas97_hist": 93.0
+      "mogas97_hist": 93
     },
     {
       "date": "2024-01-08",
@@ -9228,7 +9228,7 @@
       "icp": 90.8,
       "kurs": 15923,
       "mogas92_hist": 103.02,
-      "mogas97_hist": 108.0
+      "mogas97_hist": 108
     },
     {
       "date": "2024-04-05",
@@ -12401,6 +12401,13 @@
       "kurs": 17965,
       "mogas92_live": 136.12,
       "mogas97_estimated": 141.78
+    },
+    {
+      "date": "2026-09-30",
+      "icp": 115.24,
+      "kurs": 17998,
+      "mogas92_live": 136.11,
+      "mogas97_estimated": 141.77
     }
   ],
   "daily_note": "ICP harian = estimasi regresi Brent+Dubai (kalibrasi R2=0.985, lemah saat guncangan geopolitik ekstrem). Kurs harian = rata-rata Kurs Jual & Beli, data resmi Bank Indonesia (Kurs Transaksi). Histori penuh 2019-01-02 s/d 2026-09-08 sudah terisi; bulan berjalan lanjut ter-update otomatis oleh workflow. Mogas 92/97 historis (mogas92_hist/mogas97_hist) dari TradingView (DCB1+1NA1 / X01), tersedia Sep 2022 - Ags 2024 & awal Jun 2026.",
