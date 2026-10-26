@@ -1591,7 +1591,7 @@
     {
       "month": "2026-10",
       "icp": 114.8,
-      "kurs": 18047,
+      "kurs": 18069,
       "pertamax_actual": {
         "jakarta": 15950,
         "sumut": 16300
@@ -1602,7 +1602,7 @@
       },
       "mogas97_estimated": 135.47,
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-10-25T02:21:43.616Z",
+      "updated_at": "2026-10-26T02:21:45.614Z",
       "mogas92_estimated": 129.81,
       "mogas92_estimated_n": 7
     }
@@ -12610,6 +12610,14 @@
       "date": "2026-10-25",
       "icp": 114.8,
       "kurs": 18047,
+      "mogas92_estimated": 129.81,
+      "mogas92_estimated_n": 7,
+      "mogas97_estimated": 135.47
+    },
+    {
+      "date": "2026-10-26",
+      "icp": 114.8,
+      "kurs": 18069,
       "mogas92_estimated": 129.81,
       "mogas92_estimated_n": 7,
       "mogas97_estimated": 135.47
