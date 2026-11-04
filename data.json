@@ -1608,8 +1608,8 @@
     },
     {
       "month": "2026-11",
-      "icp": 120.49,
-      "kurs": 18161,
+      "icp": 118.44,
+      "kurs": 18148,
       "pertamax_actual": {
         "jakarta": 15950,
         "sumut": 16300
@@ -1618,11 +1618,11 @@
         "jakarta": 19600,
         "sumut": 20000
       },
-      "mogas92_estimated": 135.51,
+      "mogas92_estimated": 133.45,
       "mogas92_estimated_n": 7,
-      "mogas97_estimated": 141.17,
+      "mogas97_estimated": 139.11,
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-11-03T04:38:18.237Z"
+      "updated_at": "2026-11-04T03:57:42.310Z"
     }
   ],
   "pbbkb_note": {
@@ -12703,6 +12703,14 @@
       "mogas92_estimated": 135.51,
       "mogas92_estimated_n": 7,
       "mogas97_estimated": 141.17
+    },
+    {
+      "date": "2026-11-04",
+      "icp": 118.44,
+      "kurs": 18148,
+      "mogas92_estimated": 133.45,
+      "mogas92_estimated_n": 7,
+      "mogas97_estimated": 139.11
     }
   ],
   "daily_note": "ICP harian = estimasi regresi Brent+Dubai (kalibrasi R2=0.985, lemah saat guncangan geopolitik ekstrem). Kurs harian = rata-rata Kurs Jual & Beli, data resmi Bank Indonesia (Kurs Transaksi). Histori penuh 2019-01-02 s/d 2026-09-08 sudah terisi; bulan berjalan lanjut ter-update otomatis oleh workflow. Mogas 92/97 historis (mogas92_hist/mogas97_hist) dari TradingView (DCB1+1NA1 / X01), tersedia Sep 2022 - Ags 2024 & awal Jun 2026.",
