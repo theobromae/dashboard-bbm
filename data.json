@@ -1620,7 +1620,7 @@
       },
       "mogas97_estimated": 112.38,
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-11-21T04:50:27.958Z",
+      "updated_at": "2026-11-22T04:06:47.885Z",
       "mogas92_estimated": 106.72,
       "mogas92_estimated_n": 7
     }
@@ -12844,6 +12844,14 @@
       "mogas92_estimated": 106.72,
       "mogas92_estimated_n": 7,
       "mogas97_estimated": 112.38
+    },
+    {
+      "date": "2026-11-22",
+      "icp": 92.09,
+      "kurs": 18269,
+      "mogas92_estimated": 106.72,
+      "mogas92_estimated_n": 7,
+      "mogas97_estimated": 112.38
     }
   ],
   "daily_note": "ICP harian = estimasi regresi Brent+Dubai (kalibrasi R2=0.985, lemah saat guncangan geopolitik ekstrem). Kurs harian = rata-rata Kurs Jual & Beli, data resmi Bank Indonesia (Kurs Transaksi). Histori penuh 2019-01-02 s/d 2026-09-08 sudah terisi; bulan berjalan lanjut ter-update otomatis oleh workflow. Mogas 92/97 historis (mogas92_hist/mogas97_hist) dari TradingView (DCB1+1NA1 / X01), tersedia Sep 2022 - Ags 2024 & awal Jun 2026.",
@@ -12893,7 +12901,7 @@
     "fiscal_model": {
       "note": "Frekuensi historis (2019-2026, DKI Jakarta, bulanan): dari bulan2 dgn gap Pertalite di zona tsb, berapa yg diikuti perubahan harga Pertamax/Turbo dalam 3 bulan. Jendela tumpang tindih & kejadian mengelompok (2022, 2026) -> efektif hanya beberapa episode; baca sbg indikasi, bukan probabilitas presisi. Dihitung ulang: python3 scripts/backtest.py --write-model",
       "lookahead_months": 3,
-      "event_pct": 8.0,
+      "event_pct": 8,
       "pertamax": {
         "bands": [
           {
@@ -12936,7 +12944,7 @@
         "plite_gap_before_up8": [
           {
             "month": "2022-04",
-            "plite_gap": 86.0,
+            "plite_gap": 86,
             "gap": 84.2
           },
           {
