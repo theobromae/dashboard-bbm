@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Peringatan Dini Harga Pertamax &amp; Pertamax Turbo</title>
+<title>Peringatan Dini Harga Pertamax, Pertamax Turbo &amp; Pertalite</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header>
   <h1>🚦 Peringatan Dini Harga Pertamax &amp; Pertamax Turbo</h1>
-  <p>Skor gabungan gap harga keekonomian, durasi tertahan, momentum ICP/kurs, dan deviasi asumsi ICP APBN.</p>
+  <p>Skor gabungan gap harga keekonomian, durasi tertahan, momentum ICP/kurs, dan deviasi asumsi ICP APBN &middot; plus indikator tekanan fiskal kompensasi Pertalite.</p>
   <div class="updated" id="last-updated">Memuat data...</div>
   <div class="region-switch" role="group" aria-label="Pilih wilayah">
     <button type="button" class="region-btn active" data-region="jakarta">DKI Jakarta</button>
@@ -27,6 +27,8 @@
     <div class="card" id="card-pertamax"></div>
     <div class="card" id="card-turbo"></div>
   </div>
+
+  <div class="card" id="card-pertalite"></div>
 
   <div class="card chart-card">
     <div class="chart-head">
@@ -50,9 +52,20 @@
     <div class="chart-wrap"><canvas id="chart-turbo" role="img" aria-label="Grafik Pertamax Turbo aktual vs keekonomian vs ICP"></canvas></div>
   </div>
 
+  <div class="card chart-card">
+    <div class="chart-head">
+      <div>
+        <h2>Pertalite (RON 90, JBKP) — Harga Jual vs Harga Formula vs ICP</h2>
+        <div class="sub">Garis hijau = harga jual (ditetapkan Menteri ESDM, nasional) &middot; garis oranye putus-putus = HJE formula JBKP (99,21% MOPS Mogas 92 + Rp1.200 + Rp90 + PPN + PBBKB 5%) &middot; jarak keduanya = kompensasi per liter yang ditanggung APBN &middot; garis biru tipis = ICP (sumbu kanan). Tidak terpengaruh tombol wilayah.</div>
+      </div>
+      <button type="button" class="reset-zoom-btn" data-target="chart-pertalite">Reset Zoom</button>
+    </div>
+    <div class="chart-wrap"><canvas id="chart-pertalite" role="img" aria-label="Grafik Pertalite harga jual vs harga formula vs ICP"></canvas></div>
+  </div>
+
   <div class="card">
     <h2>Filter Riwayat</h2>
-    <div class="sub">Berlaku untuk kedua tabel riwayat di bawah</div>
+    <div class="sub">Berlaku untuk semua tabel riwayat di bawah</div>
     <div class="filter-row">
       <label>Dari
         <input type="date" id="filter-from" />
@@ -84,6 +97,15 @@
   </div>
 
   <div class="card">
+    <h2>Riwayat 12 Bulan — Pertalite (nasional)</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Bulan</th><th>Harga jual</th><th>Harga formula</th><th>Selisih/liter</th><th>Gap%</th><th>Durasi</th></tr></thead>
+      <tbody id="table-pertalite"></tbody>
+    </table></div>
+    <div class="footnote">Selisih positif = kompensasi per liter yang ditanggung APBN. Durasi = bulan beruntun harga jual di bawah harga formula. Sebelum Mar 2022 Pertalite masih JBU; rumus JBKP dipakai sbg pembanding saja.</div>
+  </div>
+
+  <div class="card">
     <h2>Update Harga BBM</h2>
     <div class="sub">Commit langsung ke <code>data.json</code> di GitHub. Token TIDAK disimpan permanen -- hanya di sessionStorage browser ini, hilang saat tab ditutup.</div>
     <form id="price-update-form" class="update-form">
@@ -100,6 +122,7 @@
           <select id="upd-product">
             <option value="ron92">Pertamax</option>
             <option value="ron98">Pertamax Turbo</option>
+            <option value="ron90">Pertalite (nasional, wilayah diabaikan)</option>
           </select>
         </label>
         <label>Wilayah
@@ -131,6 +154,7 @@
       🟢 Hijau &middot; 🟡 Kuning &middot; 🔴 Merah (ambang beda per produk — lihat <code>WEIGHTS</code> di <code>app.js</code>).<br/><br/>
       <b>Catatan jujur:</b> backtest ini hanya berdasarkan 4 kejadian kenaikan besar per produk sepanjang 2019-2026 — sample kecil, jadi angka recall/presisi di atas indikatif, bukan jaminan statistik. Kalibrasi ulang dianjurkan begitu ada lebih banyak data.<br/><br/>
       <b>Update bulanan:</b> edit <code>data.json</code>, tambahkan satu baris bulan berjalan (ICP dari rilis Kementerian ESDM, kurs dari BI, harga aktual dari pengumuman resmi Pertamina), lalu commit &amp; push ke GitHub — halaman ini otomatis terbarui.<br/>
+      <b>Pertalite (JBKP)</b>: harga formula = (99,21% &times; MOPS Mogas 92 &times; kurs/159 + Rp1.200 + Rp90) &times; (1 + PPN + PBBKB 5%), sesuai Kepmen ESDM 255.K/MG.01/MEM.M/2022 &amp; Permen ESDM 11/2022. Selisihnya dengan harga jual = kompensasi APBN per liter, dipakai sebagai indikator tekanan fiskal (belum dijadikan skor). Validasi: Mei 2026 formula Rp16.340 vs angka Pertamina Rp16.088 (selisih 1,6%).<br/><br/>
       <b>Harga keekonomian</b> adalah ESTIMASI hasil formula Kepmen ESDM (MOPS = ICP + crack spread rata-rata historis + konstanta rezim + margin 10% + PPN/PBBKB ~15%), bukan angka resmi Pertamina — gunakan untuk melihat tren &amp; gap, bukan sebagai angka presisi mutlak.
     </div>
   </div>

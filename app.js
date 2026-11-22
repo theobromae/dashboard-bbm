@@ -102,6 +102,110 @@ function hargaKeekonomian(r, monthStr, product) {
   return hargaDasar * 1.15;                        // + PPN & PBBKB (estimasi ~15%)
 }
 
+// ============================================================
+// PERTALITE (RON 90, JBKP) -- indikator tekanan fiskal
+// ------------------------------------------------------------
+// Rumus resmi (dicek 2026-11-22):
+//   HIP RON90  = 99,21% x MOPS/Argus Gasoline 92
+//                (Kepmen 62.K/12/MEM/2020 jo. 245.K/MG.01/MEM.M/2022)
+//   Harga dasar = 100% HIP + Rp1.200/liter (Kepmen 255.K/MG.01/MEM.M/2022)
+//   HJE formula = harga dasar + Rp90 (distribusi penugasan, Permen 11/2022)
+//                 + PPN + PBBKB
+// TIDAK ada margin 10/90 seperti JBU -- margin sudah masuk Rp1.200.
+// Harga jual ditetapkan Menteri (Rp7.650 -> Rp10.000 sejak 3 Sep 2022);
+// selisih HJE formula - harga jual = kompensasi per liter yang ditanggung
+// APBN. Tidak ada skor peringatan dini terkalibrasi utk Pertalite (baru 1
+// kejadian kenaikan dalam data) -- yang ditampilkan gap & beban kompensasi.
+// Nilai di bawah default; dibaca dari data.json -> pertalite.formula.
+// ============================================================
+let PERTALITE_FORMULA = {
+  hip_pct_mogas92: 0.9921,
+  konstanta_harga_dasar: 1200,
+  biaya_distribusi_penugasan: 90,
+  ppn: [{ from: "2019-01", rate: 0.10 }, { from: "2022-04", rate: 0.11 }],
+  pbbkb: 0.05,
+};
+
+function ppnRateFor(monthStr) {
+  let rate = PERTALITE_FORMULA.ppn[0].rate;
+  for (const p of PERTALITE_FORMULA.ppn) if (monthStr >= p.from) rate = p.rate;
+  return rate;
+}
+
+function hargaKeekonomianPertalite(r, monthStr) {
+  const F = PERTALITE_FORMULA;
+  const hip = (F.hip_pct_mogas92 * mopsRon92(r) * r.kurs) / 159;
+  const hargaDasar = hip + F.konstanta_harga_dasar;
+  return (hargaDasar + F.biaya_distribusi_penugasan) * (1 + ppnRateFor(monthStr) + F.pbbkb);
+}
+
+// Harga jual Pertalite yang berlaku pada tanggal tsb (satu harga nasional).
+function pertalitePriceOn(data, dateStr) {
+  const changes = data.pertalite?.price_changes || [];
+  let price = null;
+  for (const c of changes) if (c.date <= dateStr) price = c.price;
+  return price;
+}
+
+// Harga di AKHIR bulan (konsisten dgn kolom aktual bulanan Pertamax:
+// harga resmi terakhir yang berlaku di bulan tsb).
+function pertalitePriceForMonth(data, monthStr) {
+  const [y, m] = monthStr.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  return pertalitePriceOn(data, lastDay);
+}
+
+function kuotaBulananKl(data, monthStr) {
+  const kuota = data.pertalite?.kuota_kl?.[monthStr.slice(0, 4)];
+  return kuota ? kuota / 12 : null;
+}
+
+function seriesPertalite(baseRows, data, resolution) {
+  const ppm = PERIODS_PER_MONTH[resolution] || 1;
+  const rows = baseRows.map((r) => {
+    const key = r.month || r.date;
+    const month = key.slice(0, 7);
+    const eco = hargaKeekonomianPertalite(r, month);
+    const selisih = eco - r.actual;
+    const gapPct = (selisih / r.actual) * 100;
+    const kuotaBln = kuotaBulananKl(data, month);
+    // Rp/liter x kl/bulan x 1000 liter/kl -> Rp/bulan
+    const bebanBulanan = kuotaBln != null && selisih > 0 ? selisih * kuotaBln * 1000 : null;
+    return { ...r, eco, selisih, gapPct, bebanBulanan };
+  });
+  // Durasi (dlm bulan) harga jual di bawah harga formula secara beruntun.
+  let n = 0;
+  for (const row of rows) {
+    n = row.gapPct > 0 ? n + 1 : 0;
+    row.durationPeriods = n;
+    row.duration = Math.round(n / ppm);
+  }
+  return rows;
+}
+
+function computePertaliteMonthly(data) {
+  const rows = data.monthly
+    .map((r) => ({
+      month: r.month, icp: r.icp, kurs: r.kurs,
+      mogas92_live: r.mogas92_live, mogas92_hist: r.mogas92_hist,
+      mogas92_estimated: r.mogas92_estimated,
+      actual: pertalitePriceForMonth(data, r.month),
+    }))
+    .filter((r) => r.actual != null && r.icp != null && r.kurs != null);
+  return seriesPertalite(rows, data, "bulanan");
+}
+
+const pertaliteCache = new Map();
+function getPertaliteTimeline(data, resolution) {
+  if (resolution === "bulanan") return computePertaliteMonthly(data);
+  if (pertaliteCache.has(resolution)) return pertaliteCache.get(resolution);
+  const daily = buildDailyTimeline(data, "ron90", "jakarta");
+  const raw = resolution === "harian" ? daily : resampleWeekly(daily);
+  const rows = seriesPertalite(raw, data, resolution);
+  pertaliteCache.set(resolution, rows);
+  return rows;
+}
+
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function apbnAssumptionFor(monthStr, apbnData) {
@@ -144,6 +248,7 @@ function dateRangeDays(startStr, endStr) {
 }
 
 function getActualForDate(data, product, region, dateStr, monthlyMap) {
+  if (product === "ron90") return pertalitePriceOn(data, dateStr); // satu harga nasional
   const prodKey = product === "ron92" ? "pertamax" : "turbo";
   const field = product === "ron92" ? "pertamax_actual" : "turbo_actual";
   const month = dateStr.slice(0, 7);
@@ -210,6 +315,7 @@ function getMonthlyMap(data) {
 function invalidatePerfCaches() {
   dailyRawCache.clear();
   scoredCache.clear();
+  pertaliteCache.clear();
   monthlyMapCache = null;
 }
 
@@ -432,6 +538,73 @@ function renderScoreCard(containerId, label, row) {
   `;
 }
 
+function fmtTriliun(rp) {
+  return "Rp" + (rp / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " T";
+}
+
+function renderPertaliteCard(row) {
+  const el = document.getElementById("card-pertalite");
+  if (!el) return;
+  if (!row) {
+    el.innerHTML = `<h2>Pertalite (RON 90) — Tekanan Fiskal</h2><div class="sub">Belum ada data.</div>`;
+    return;
+  }
+  const subsidized = row.selisih > 0;
+  const light = row.gapPct >= 40 ? "red" : row.gapPct >= 15 ? "amber" : "green";
+  const label = !subsidized ? "DI ATAS FORMULA" : light === "red" ? "TEKANAN TINGGI" : light === "amber" ? "TEKANAN SEDANG" : "TEKANAN RENDAH";
+  el.innerHTML = `
+    <h2>Pertalite (RON 90) — Tekanan Fiskal (nasional)</h2>
+    <div class="current-price">${fmtRp(row.actual)}<span class="unit">/liter</span></div>
+    <div class="sub">Bulan acuan: ${row.month} &middot; harga jual ditetapkan Menteri ESDM (JBKP), selisih ditanggung APBN lewat kompensasi</div>
+    <div class="score-row">
+      <div class="light ${light}">${Math.round(row.gapPct)}%</div>
+      <div class="score-detail">
+        <div class="status-label ${light}">${label}</div>
+        <div class="score-num">Harga formula ${fmtRp(row.eco)} &middot; kompensasi ${fmtRp(Math.max(0, row.selisih))}/liter &middot; di bawah formula ${row.duration} bln beruntun</div>
+      </div>
+    </div>
+    <div class="components">
+      <div class="comp">
+        <div class="k">Harga Formula (HJE)</div>
+        <div class="v">${fmtRp(row.eco)}</div>
+      </div>
+      <div class="comp">
+        <div class="k">Kompensasi / liter</div>
+        <div class="v">${fmtRp(Math.max(0, row.selisih))}</div>
+        <div class="bar"><div style="width:${clamp(row.gapPct, 0, 100)}%;background:var(--red)"></div></div>
+      </div>
+      <div class="comp">
+        <div class="k">Durasi di bawah formula</div>
+        <div class="v">${row.duration} bulan</div>
+      </div>
+      <div class="comp">
+        <div class="k">Estimasi beban / bulan</div>
+        <div class="v">${row.bebanBulanan != null ? fmtTriliun(row.bebanBulanan) : "belum ada data kuota"}</div>
+      </div>
+    </div>
+    <div class="footnote">Indikator saja, belum ada skor peringatan dini terkalibrasi (baru 1 kejadian kenaikan Pertalite dalam data: 3 Sep 2022). Beban/bulan = kompensasi/liter &times; kuota tahunan/12, kasar.</div>
+  `;
+}
+
+function renderPertaliteTable(tbodyId, rows, showAll, limit) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  if (!rows || !rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Belum ada data</td></tr>`;
+    return;
+  }
+  const displayRows = showAll ? rows : rows.slice(-(limit ?? 12));
+  tbody.innerHTML = [...displayRows].reverse().map((r) => `
+    <tr>
+      <td>${r.month || r.date}</td>
+      <td>${fmtRp(r.actual)}</td>
+      <td>${fmtRp(r.eco)}</td>
+      <td>${fmtRp(r.selisih)}</td>
+      <td>${fmtPct(r.gapPct)}</td>
+      <td>${r.duration}</td>
+    </tr>`).join("");
+}
+
 const chartInstances = {};
 
 function renderChart(canvasId, rows, label, color) {
@@ -612,8 +785,15 @@ function renderAll(region, resolution) {
   renderChart("chart-pertamax", ron92Display, "Pertamax", "#e0524a");
   renderChart("chart-turbo", ron98Display, "Pertamax Turbo", "#e0524a");
 
+  // Pertalite: satu harga nasional -> tidak tergantung tombol wilayah.
+  const ron90Monthly = computePertaliteMonthly(data);
+  renderPertaliteCard(ron90Monthly[ron90Monthly.length - 1] ?? null);
+  const ron90Display = currentResolution === "bulanan" ? ron90Monthly : getPertaliteTimeline(data, currentResolution);
+  renderChart("chart-pertalite", ron90Display, "Pertalite", "#3fb27f");
+
   lastRows.ron92 = ron92Display;
   lastRows.ron98 = ron98Display;
+  lastRows.ron90 = ron90Display;
   refreshTables();
 
   const resLabel = { bulanan: "Bulanan", mingguan: "Mingguan", harian: "Harian" }[currentResolution];
@@ -687,6 +867,21 @@ async function commitPriceUpdate({ token, product, region, date, price }) {
   const fileMeta = await getRes.json();
   const content = JSON.parse(decodeURIComponent(escape(atob(fileMeta.content))));
 
+  const productLabel = { ron92: "Pertamax", ron98: "Pertamax Turbo", ron90: "Pertalite" }[product];
+
+  if (product === "ron90") {
+    // Pertalite: satu harga nasional, cukup dicatat di pertalite.price_changes
+    // (kolom bulanan diturunkan dari log ini, jadi wilayah diabaikan).
+    if (!content.pertalite) content.pertalite = { price_changes: [] };
+    const plog = content.pertalite.price_changes || (content.pertalite.price_changes = []);
+    const i = plog.findIndex((e) => e.date === date);
+    if (i >= 0) plog[i] = { date, price };
+    else plog.push({ date, price });
+    plog.sort((a, b) => (a.date < b.date ? -1 : 1));
+    return await putDataJson(apiUrl, headers, fileMeta.sha, content,
+      `chore: update harga Pertalite (nasional) ${date} -> Rp${price}`);
+  }
+
   const prodKey = product === "ron92" ? "pertamax" : "turbo";
 
   // 2. Catat di log price_changes (tanggal presisi) -- ini yg dipakai
@@ -725,15 +920,16 @@ async function commitPriceUpdate({ token, product, region, date, price }) {
   }
 
   // 4. Commit balik ke GitHub
+  return await putDataJson(apiUrl, headers, fileMeta.sha, content,
+    `chore: update harga ${productLabel} ${region} ${date} -> Rp${price}`);
+}
+
+async function putDataJson(apiUrl, headers, sha, content, message) {
   const newContentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2) + "\n")));
   const putRes = await fetch(apiUrl, {
     method: "PUT",
     headers: { ...headers, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: `chore: update harga ${product === "ron92" ? "Pertamax" : "Pertamax Turbo"} ${region} ${date} -> Rp${price}`,
-      content: newContentB64,
-      sha: fileMeta.sha,
-    }),
+    body: JSON.stringify({ message, content: newContentB64, sha }),
   });
   if (!putRes.ok) {
     const errBody = await putRes.text();
@@ -785,7 +981,7 @@ function setupUpdateForm() {
   });
 }
 
-let lastRows = { ron92: [], ron98: [] };
+let lastRows = { ron92: [], ron98: [], ron90: [] };
 
 function getDateFilterRange() {
   const from = document.getElementById("filter-from")?.value || "";
@@ -819,6 +1015,8 @@ function refreshTables() {
   const limit = TABLE_DEFAULT_LIMIT[currentResolution] ?? 12;
   renderTable("table-pertamax", filtered92 ?? lastRows.ron92, hasDateFilter, limit);
   renderTable("table-turbo", filtered98 ?? lastRows.ron98, hasDateFilter, limit);
+  const filtered90 = applyDateFilter(lastRows.ron90);
+  renderPertaliteTable("table-pertalite", filtered90 ?? lastRows.ron90, hasDateFilter, limit);
 }
 
 function setupDateFilter() {
@@ -840,6 +1038,7 @@ async function main() {
   const res = await fetch("data.json");
   dashboardData = await res.json();
   if (typeof dashboardData.mogas_gap_97_92?.value === "number") GAP_97_92 = dashboardData.mogas_gap_97_92.value;
+  if (dashboardData.pertalite?.formula) PERTALITE_FORMULA = { ...PERTALITE_FORMULA, ...dashboardData.pertalite.formula };
   invalidatePerfCaches();
 
   setupRegionSwitch();

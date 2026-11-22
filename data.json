@@ -15,7 +15,7 @@
     "post_2020_03": {
       "ron92": 1800,
       "ron98": 2000,
-      "desc": "Kepmen 62 K/12/MEM/2020"
+      "desc": "Kepmen 62 K/12/MEM/2020 jo. 245.K/MG.01/MEM.M/2022 (dicek ulang 2026-11-22: <RON95 = Rp1.800, RON95/98 = Rp2.000, margin 10/90)"
     }
   },
   "apbn_icp_assumptions": {
@@ -12854,5 +12854,41 @@
     "n_days": 430,
     "period": "2022-09-13 s/d 2026-06-09",
     "note": "Rerata selisih harian Mogas 97 (TradingView X01) - Mogas 92 (DCB1 + 1NA1). MOPS Pertamax Turbo = MOPS RON92 + nilai ini, kecuali di tanggal yang punya harga Mogas 97 historis (mogas97_hist). Menggantikan crack spread RON98 (X01 - ICP = 17,02) yang jauh kurang akurat (MAE 5,2 vs 0,87 US$/bbl)."
+  },
+  "pertalite": {
+    "note": "Pertalite (Bensin RON 90). Harga jual ditetapkan Menteri ESDM, berlaku nasional (satu harga). Sejak Kepmen ESDM 37.K/HK.02/MEM.M/2022 (Mar 2022) berstatus JBKP; selisih harga jual vs formula dibayar pemerintah sebagai kompensasi.",
+    "price_changes": [
+      {
+        "date": "2019-01-01",
+        "price": 7650
+      },
+      {
+        "date": "2022-09-03",
+        "price": 10000
+      }
+    ],
+    "formula": {
+      "hip_pct_mogas92": 0.9921,
+      "hip_desc": "HIP Bensin RON 90 = 99,21% x MOPS/Argus Gasoline 92 (Kepmen ESDM 62.K/12/MEM/2020 jo. 245.K/MG.01/MEM.M/2022)",
+      "konstanta_harga_dasar": 1200,
+      "konstanta_desc": "Harga dasar JBKP RON 90 = 100% HIP + Rp1.200/liter (Kepmen ESDM 255.K/MG.01/MEM.M/2022, berlaku surut 1 Jan 2022)",
+      "biaya_distribusi_penugasan": 90,
+      "distribusi_desc": "HJE JBKP = harga dasar + Rp90/liter biaya tambahan distribusi wilayah penugasan + PPN + PBBKB (Permen ESDM 11/2022)",
+      "ppn": [
+        {
+          "from": "2019-01",
+          "rate": 0.1
+        },
+        {
+          "from": "2022-04",
+          "rate": 0.11
+        }
+      ],
+      "pbbkb": 0.05
+    },
+    "kuota_kl": {
+      "2026": 29270000
+    },
+    "kuota_note": "Kuota/prognosis JBKP Pertalite (kl/tahun), dipakai utk estimasi kasar beban kompensasi bulanan = selisih x kuota/12. Sumber: APBN 2026 / BPH Migas."
   }
 }

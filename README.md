@@ -86,3 +86,27 @@ Jalankan ulang setiap CSV di `data/raw/` diperbarui (gap ikut dihitung ulang). W
 - **Backtest hanya berdasarkan 4 kejadian kenaikan besar per produk** — sample kecil, angka recall/presisi indikatif, bukan jaminan statistik ke depan.
 - **Model ini secara struktural tidak bisa menangkap kenaikan bertahap kecil (~10-12%) tanpa penahanan gap besar** — hanya efektif untuk pola "ditahan lama lalu meledak."
 - **ICP & kurs histori 2019-2026 kini direkonstruksi dari data harian riil** (Brent/Dubai via regresi terkalibrasi R²=0,985 utk ICP; kurs Jual/Beli resmi Bank Indonesia utk kurs), menggantikan interpolasi kasar sebelumnya. 51 bulan ICP tetap pakai kutipan resmi ESDM (lebih otoritatif dari estimasi regresi). **Estimasi ICP dari Brent/Dubai tetap melemah saat guncangan geopolitik ekstrem** — bisa meleset >US$12/barel pada bulan dengan lonjakan tiba-tiba seperti April 2026.
+
+## Pertalite (RON 90, JBKP) — indikator tekanan fiskal (sejak 2026-11-22)
+
+Pertalite disubsidi lewat kompensasi APBN, jadi selisih harga jual vs harga formula dipakai sebagai indikator tekanan fiskal pemerintah (kartu, grafik, dan tabel tersendiri; tidak terpengaruh tombol wilayah karena harganya satu nasional).
+
+```
+HIP RON 90   = 99,21% × MOPS/Argus Gasoline 92        (Kepmen ESDM 62.K/12/MEM/2020 jo. 245.K/MG.01/MEM.M/2022)
+Harga dasar  = 100% HIP + Rp1.200/liter                (Kepmen ESDM 255.K/MG.01/MEM.M/2022, berlaku surut 1 Jan 2022)
+HJE formula  = harga dasar + Rp90 + PPN + PBBKB 5%     (Permen ESDM 11/2022; PPN 10% s/d Mar 2022, 11% sesudahnya)
+Kompensasi   = HJE formula − harga jual (Rp7.650 → Rp10.000 sejak 3 Sep 2022)
+```
+
+- Harga jual dicatat di `data.json → pertalite.price_changes` (bisa lewat form "Update Harga BBM", pilih Pertalite).
+- Estimasi beban per bulan = kompensasi/liter × `pertalite.kuota_kl[tahun]` / 12 (baru tersedia 2026: 29,27 juta kl).
+- Validasi: Mei 2026 formula Rp16.340 vs angka Pertamina Rp16.088 (selisih 1,6%).
+- Sebelum Mar 2022 Pertalite masih JBU; rumus JBKP di periode itu hanya pembanding.
+- Belum ada skor peringatan dini terkalibrasi (baru 1 kejadian kenaikan dalam data).
+
+### Hasil cek ulang Kepmen 245.K/MG.01/MEM.M/2022 (JBU)
+
+Konstanta yang dipakai sudah sesuai: bensin < RON 95 = Rp1.800/liter, RON 95/98 = Rp2.000/liter, margin = 10/90 × (MOPS + konstanta). Dua hal di formula Pertamax/Turbo yang **belum** disesuaikan (sengaja, karena akan menggeser kalibrasi backtest):
+
+1. RON 98 di Kepmen = **101%** × MOPS Gasoline 97; `mopsRon98()` saat ini memakai 100%.
+2. Pajak dihitung flat ×1,15; sejak Apr 2022 PPN 11% + PBBKB 5% = ×1,16 (sebelumnya ×1,15).
