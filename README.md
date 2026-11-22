@@ -102,11 +102,33 @@ Kompensasi   = HJE formula − harga jual (Rp7.650 → Rp10.000 sejak 3 Sep 2022
 - Estimasi beban per bulan = kompensasi/liter × `pertalite.kuota_kl[tahun]` / 12 (baru tersedia 2026: 29,27 juta kl).
 - Validasi: Mei 2026 formula Rp16.340 vs angka Pertamina Rp16.088 (selisih 1,6%).
 - Sebelum Mar 2022 Pertalite masih JBU; rumus JBKP di periode itu hanya pembanding.
-- Belum ada skor peringatan dini terkalibrasi (baru 1 kejadian kenaikan dalam data).
+- Pertalite **tidak** diberi peringatan dini sendiri. Gap-nya dipakai sebagai indikator tambahan untuk Pertamax & Turbo (lihat bawah).
 
-### Hasil cek ulang Kepmen 245.K/MG.01/MEM.M/2022 (JBU)
+### Model tekanan fiskal Pertalite → Pertamax/Turbo
 
-Konstanta yang dipakai sudah sesuai: bensin < RON 95 = Rp1.800/liter, RON 95/98 = Rp2.000/liter, margin = 10/90 × (MOPS + konstanta). Dua hal di formula Pertamax/Turbo yang **belum** disesuaikan (sengaja, karena akan menggeser kalibrasi backtest):
+`python3 scripts/backtest.py --write-model` menghitung, untuk tiap zona gap Pertalite, berapa bulan yang diikuti perubahan harga Pertamax/Turbo dalam 3 bulan (DKI Jakarta, 2019–2026). Hasil disimpan di `data.json → pertalite.fiscal_model` dan ditampilkan di kartu Pertalite serta kotak tambahan di kartu Pertamax/Turbo.
 
-1. RON 98 di Kepmen = **101%** × MOPS Gasoline 97; `mopsRon98()` saat ini memakai 100%.
-2. Pajak dihitung flat ×1,15; sejak Apr 2022 PPN 11% + PBBKB 5% = ×1,16 (sebelumnya ×1,15).
+| Gap Pertalite | n bulan | Pertamax naik ≥8% | Turbo naik ≥8% | Turbo turun |
+|---|---|---|---|---|
+| < 20% | 56 | 4% (2) | 4% (2) | 32% |
+| 20–30% | 16 | 6% (1) | 19% (3) | 25% |
+| 30–50% | 9 | 22% (2) | 22% (2) | 11% |
+| ≥ 50% | 11 | **64% (7)** | 45% (5) | 55% |
+| semua bulan | 92 | 13% | 13% | |
+
+Bacaan: 3 dari 4 kenaikan Pertamax ≥8% didahului gap Pertalite ≥ 50% (≈ Rp5.000+/liter) dalam 3 bulan sebelumnya. Pengecualiannya Okt 2023 (gap 14–31%), kenaikan bertahap yang juga tidak tertangkap skor gabungan. Turbo di zona yang sama bisa naik maupun turun karena lebih mengikuti pasar, sehingga indikator ini lebih berguna untuk Pertamax.
+
+**Kenapa tidak masuk skor gabungan:** grid search menemukan kombinasi (bobot fiskal 0,3, ambang merah 65) yang menaikkan recall Pertamax 50% → 75% dengan presisi tetap 100%. Tapi hasil itu hanya bergantung pada satu bulan (Jul 2022, skor 65,1 vs ambang 65), hanya 21 dari 375 kombinasi tetangga yang mencapainya, dan uji leave-one-event-out gagal menangkap kejadian Sep/Okt 2022 saat kejadian itu disembunyikan. Itu overfit, jadi tidak dipakai. Untuk Turbo, komponen fiskal tidak menambah apa pun. Korelasi gap Pertalite vs gap Pertamax 0,83 (Turbo 0,68), karena keduanya digerakkan Mogas 92.
+
+Catatan: jendela 3 bulan tumpang tindih dan kejadian mengelompok di 2022 & 2026, jadi angka di atas indikatif.
+
+### Hasil cek ulang Kepmen 245.K/MG.01/MEM.M/2022 (JBU) & backtest ulang (2026-11-22)
+
+Konstanta sudah sesuai: bensin < RON 95 = Rp1.800/liter, RON 95/98 = Rp2.000/liter, margin = 10/90 × (MOPS + konstanta). Dua koreksi sekarang **diterapkan**:
+
+1. RON 98 = **101%** × MOPS Gasoline 97 (sebelumnya 100%).
+2. Pajak ×1,15 s/d Mar 2022, **×1,16** sejak Apr 2022 (PPN 11% + PBBKB 5%).
+
+Backtest ulang (`python3 scripts/backtest.py`, replika skor bulanan `app.js`): hasil **tidak berubah**. Pertamax recall 2/4, presisi 6/6; Turbo recall 3/4, presisi 8/10. Bobot & ambang di `WEIGHTS` tetap. Harga keekonomian naik sekitar 1% (Pertamax) dan 2% (Turbo).
+
+Catatan data: baris bulanan DKI Jakarta mencatat perubahan harga di tengah bulan pada bulan berikutnya (mis. Pertamax naik 10 Jun 2026 tercatat di Juli; Turbo 18 Apr 2026 tercatat di Mei), sedangkan baris Sumut di bulan yang sama. Kalibrasi memakai konvensi Jakarta ini.

@@ -12889,6 +12889,135 @@
     "kuota_kl": {
       "2026": 29270000
     },
-    "kuota_note": "Kuota/prognosis JBKP Pertalite (kl/tahun), dipakai utk estimasi kasar beban kompensasi bulanan = selisih x kuota/12. Sumber: APBN 2026 / BPH Migas."
+    "kuota_note": "Kuota/prognosis JBKP Pertalite (kl/tahun), dipakai utk estimasi kasar beban kompensasi bulanan = selisih x kuota/12. Sumber: APBN 2026 / BPH Migas.",
+    "fiscal_model": {
+      "note": "Frekuensi historis (2019-2026, DKI Jakarta, bulanan): dari bulan2 dgn gap Pertalite di zona tsb, berapa yg diikuti perubahan harga Pertamax/Turbo dalam 3 bulan. Jendela tumpang tindih & kejadian mengelompok (2022, 2026) -> efektif hanya beberapa episode; baca sbg indikasi, bukan probabilitas presisi. Dihitung ulang: python3 scripts/backtest.py --write-model",
+      "lookahead_months": 3,
+      "event_pct": 8.0,
+      "pertamax": {
+        "bands": [
+          {
+            "min": null,
+            "max": 20,
+            "n": 56,
+            "up8": 2,
+            "up_any": 17,
+            "down_any": 22
+          },
+          {
+            "min": 20,
+            "max": 30,
+            "n": 16,
+            "up8": 1,
+            "up_any": 4,
+            "down_any": 6
+          },
+          {
+            "min": 30,
+            "max": 50,
+            "n": 9,
+            "up8": 2,
+            "up_any": 2,
+            "down_any": 2
+          },
+          {
+            "min": 50,
+            "max": null,
+            "n": 11,
+            "up8": 7,
+            "up_any": 7,
+            "down_any": 2
+          }
+        ],
+        "base": {
+          "n": 92,
+          "up8": 12
+        },
+        "plite_gap_before_up8": [
+          {
+            "month": "2022-04",
+            "plite_gap": 86.0,
+            "gap": 84.2
+          },
+          {
+            "month": "2022-10",
+            "plite_gap": 18.2,
+            "gap": 11.1
+          },
+          {
+            "month": "2023-10",
+            "plite_gap": 31.5,
+            "gap": 22.9
+          },
+          {
+            "month": "2026-07",
+            "plite_gap": 65.1,
+            "gap": 55.5
+          }
+        ]
+      },
+      "turbo": {
+        "bands": [
+          {
+            "min": null,
+            "max": 20,
+            "n": 56,
+            "up8": 2,
+            "up_any": 11,
+            "down_any": 18
+          },
+          {
+            "min": 20,
+            "max": 30,
+            "n": 16,
+            "up8": 3,
+            "up_any": 3,
+            "down_any": 4
+          },
+          {
+            "min": 30,
+            "max": 50,
+            "n": 9,
+            "up8": 2,
+            "up_any": 4,
+            "down_any": 1
+          },
+          {
+            "min": 50,
+            "max": null,
+            "n": 11,
+            "up8": 5,
+            "up_any": 7,
+            "down_any": 6
+          }
+        ],
+        "base": {
+          "n": 92,
+          "up8": 12
+        },
+        "plite_gap_before_up8": [
+          {
+            "month": "2021-10",
+            "plite_gap": 29.7,
+            "gap": 29.5
+          },
+          {
+            "month": "2022-08",
+            "plite_gap": 83.8,
+            "gap": 42.1
+          },
+          {
+            "month": "2023-10",
+            "plite_gap": 31.5,
+            "gap": 10.1
+          },
+          {
+            "month": "2026-05",
+            "plite_gap": 73.3,
+            "gap": 67.6
+          }
+        ]
+      }
+    }
   }
 }

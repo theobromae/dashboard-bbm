@@ -92,14 +92,23 @@ function mopsRon98(r) {
   return mopsRon92(r) + GAP_97_92;
 }
 
+// Pajak: PPN 10% (s/d Mar 2022) / 11% (sejak Apr 2022) + PBBKB 5%.
+function taxMultiplier(monthStr) {
+  return monthStr >= "2022-04" ? 1.16 : 1.15;
+}
+
 // r = baris {icp, kurs, mogas92_live, mogas92_hist, mogas92_estimated, mogas97_hist}
+// Kepmen 245.K/MG.01/MEM.M/2022: RON92 = 100% Gasoline 92, RON98 = 101%
+// Gasoline 97; konstanta < RON95 Rp1.800, RON95/98 Rp2.000; margin 10/90.
+// (Koreksi 101% & pajak 1,16 diterapkan 2026-11-22 -- backtest ulang:
+// recall/presisi kedua produk tidak berubah, lihat scripts/backtest.py.)
 function hargaKeekonomian(r, monthStr, product) {
   const konst = regimeConstant(monthStr, product);
-  const mops = product === "ron92" ? mopsRon92(r) : mopsRon98(r);
+  const mops = product === "ron92" ? mopsRon92(r) : mopsRon98(r) * 1.01;
   const kurs = r.kurs;
   const rpPerLiter = (mops * kurs) / 159;
   const hargaDasar = (rpPerLiter + konst) / 0.9; // margin 10% dari harga dasar (batas atas)
-  return hargaDasar * 1.15;                        // + PPN & PBBKB (estimasi ~15%)
+  return hargaDasar * taxMultiplier(monthStr);
 }
 
 // ============================================================
@@ -159,6 +168,22 @@ function kuotaBulananKl(data, monthStr) {
   const kuota = data.pertalite?.kuota_kl?.[monthStr.slice(0, 4)];
   return kuota ? kuota / 12 : null;
 }
+
+// Zona tekanan fiskal Pertalite + frekuensi historis perubahan harga
+// Pertamax/Turbo dalam 3 bulan (data.json -> pertalite.fiscal_model,
+// dihitung scripts/backtest.py --write-model). Indikator TAMBAHAN: tidak
+// masuk skor gabungan (uji grid + leave-one-out: overfit).
+function fiscalBand(data, productKey, gapPct) {
+  const fm = data.pertalite?.fiscal_model?.[productKey];
+  if (!fm) return null;
+  return fm.bands.find((b) => (b.min == null || gapPct >= b.min) && (b.max == null || gapPct < b.max)) || null;
+}
+function bandLabel(b) {
+  if (b.min == null) return `< ${b.max}%`;
+  if (b.max == null) return `≥ ${b.min}%`;
+  return `${b.min}–${b.max}%`;
+}
+function pctOf(k, n) { return n ? Math.round((k / n) * 100) : 0; }
 
 function seriesPertalite(baseRows, data, resolution) {
   const ppm = PERIODS_PER_MONTH[resolution] || 1;
@@ -492,6 +517,24 @@ function fmtPct(n) {
 let dashboardData = null;
 let currentRegion = "jakarta";
 
+// Kotak tambahan di kartu Pertamax/Turbo: tekanan fiskal Pertalite bulan
+// terakhir + frekuensi historis kenaikan >=8% produk ini di zona tsb.
+let lastPertaliteRow = null;
+function fiscalCompHtml(label) {
+  const row = lastPertaliteRow;
+  if (!row) return "";
+  const key = label.startsWith("Pertamax Turbo") ? "turbo" : "pertamax";
+  const b = fiscalBand(dashboardData, key, row.gapPct);
+  if (!b) return "";
+  const pct = pctOf(b.up8, b.n);
+  return `
+      <div class="comp wide">
+        <div class="k">Tekanan Fiskal Pertalite <span class="muted">(indikator tambahan, tidak masuk skor)</span></div>
+        <div class="v">Gap ${fmtPct(row.gapPct)} &middot; historis ${pct}% naik ≥8% dlm 3 bln</div>
+        <div class="bar"><div style="width:${pct}%;background:var(--green, #3fb27f)"></div></div>
+      </div>`;
+}
+
 function renderScoreCard(containerId, label, row) {
   const el = document.getElementById(containerId);
   if (!row) {
@@ -529,6 +572,7 @@ function renderScoreCard(containerId, label, row) {
         <div class="v">ICP ${fmtPct(row.icpMom3)} / 3bln</div>
         <div class="bar"><div style="width:${row.momentumScore}%;background:var(--blue)"></div></div>
       </div>
+      ${fiscalCompHtml(label)}
       <div class="comp">
         <div class="k">Deviasi Asumsi APBN</div>
         <div class="v">${row.hasApbn ? `ICP ${fmtPct(row.apbnDevPct)} vs asumsi $${row.apbnAssumption}` : "belum ada data"}</div>
@@ -549,40 +593,40 @@ function renderPertaliteCard(row) {
     el.innerHTML = `<h2>Pertalite (RON 90) — Tekanan Fiskal</h2><div class="sub">Belum ada data.</div>`;
     return;
   }
-  const subsidized = row.selisih > 0;
-  const light = row.gapPct >= 40 ? "red" : row.gapPct >= 15 ? "amber" : "green";
-  const label = !subsidized ? "DI ATAS FORMULA" : light === "red" ? "TEKANAN TINGGI" : light === "amber" ? "TEKANAN SEDANG" : "TEKANAN RENDAH";
+  const data = dashboardData;
+  const lines = [["pertamax", "Pertamax"], ["turbo", "Pertamax Turbo"]].map(([k, label]) => {
+    const b = fiscalBand(data, k, row.gapPct);
+    if (!b) return "";
+    return `<tr><td>${label}</td><td>${pctOf(b.up8, b.n)}% <span class="muted">(${b.up8}/${b.n} bln)</span></td><td>${pctOf(b.up_any, b.n)}%</td><td>${pctOf(b.down_any, b.n)}%</td></tr>`;
+  }).join("");
+  const anyBand = fiscalBand(data, "pertamax", row.gapPct);
+  const fm = data.pertalite?.fiscal_model;
+  const allBands = fm ? fm.pertamax.bands.map((b, i) => {
+    const t = fm.turbo.bands[i];
+    const cur = anyBand && b.min === anyBand.min ? ' class="cur-band"' : "";
+    return `<tr${cur}><td>${bandLabel(b)}</td><td>${pctOf(b.up8, b.n)}%</td><td>${pctOf(t.up8, t.n)}%</td><td>${b.n}</td></tr>`;
+  }).join("") : "";
   el.innerHTML = `
-    <h2>Pertalite (RON 90) — Tekanan Fiskal (nasional)</h2>
-    <div class="current-price">${fmtRp(row.actual)}<span class="unit">/liter</span></div>
-    <div class="sub">Bulan acuan: ${row.month} &middot; harga jual ditetapkan Menteri ESDM (JBKP), selisih ditanggung APBN lewat kompensasi</div>
-    <div class="score-row">
-      <div class="light ${light}">${Math.round(row.gapPct)}%</div>
-      <div class="score-detail">
-        <div class="status-label ${light}">${label}</div>
-        <div class="score-num">Harga formula ${fmtRp(row.eco)} &middot; kompensasi ${fmtRp(Math.max(0, row.selisih))}/liter &middot; di bawah formula ${row.duration} bln beruntun</div>
-      </div>
-    </div>
+    <h2>Pertalite (RON 90) — Indikator Tekanan Fiskal untuk Pertamax &amp; Turbo</h2>
+    <div class="sub">Bulan acuan: ${row.month} &middot; harga jual ${fmtRp(row.actual)}/liter (nasional, ditetapkan Menteri ESDM) &middot; bukan peringatan dini Pertalite</div>
     <div class="components">
-      <div class="comp">
-        <div class="k">Harga Formula (HJE)</div>
-        <div class="v">${fmtRp(row.eco)}</div>
-      </div>
-      <div class="comp">
-        <div class="k">Kompensasi / liter</div>
-        <div class="v">${fmtRp(Math.max(0, row.selisih))}</div>
-        <div class="bar"><div style="width:${clamp(row.gapPct, 0, 100)}%;background:var(--red)"></div></div>
-      </div>
-      <div class="comp">
-        <div class="k">Durasi di bawah formula</div>
-        <div class="v">${row.duration} bulan</div>
-      </div>
-      <div class="comp">
-        <div class="k">Estimasi beban / bulan</div>
-        <div class="v">${row.bebanBulanan != null ? fmtTriliun(row.bebanBulanan) : "belum ada data kuota"}</div>
-      </div>
+      <div class="comp"><div class="k">Harga Formula (HJE)</div><div class="v">${fmtRp(row.eco)}</div></div>
+      <div class="comp"><div class="k">Gap / Kompensasi per liter</div><div class="v">${fmtPct(row.gapPct)} &middot; ${fmtRp(Math.max(0, row.selisih))}</div></div>
+      <div class="comp"><div class="k">Di bawah formula</div><div class="v">${row.duration} bulan beruntun</div></div>
+      <div class="comp"><div class="k">Estimasi beban / bulan</div><div class="v">${row.bebanBulanan != null ? fmtTriliun(row.bebanBulanan) : "belum ada data kuota"}</div></div>
     </div>
-    <div class="footnote">Indikator saja, belum ada skor peringatan dini terkalibrasi (baru 1 kejadian kenaikan Pertalite dalam data: 3 Sep 2022). Beban/bulan = kompensasi/liter &times; kuota tahunan/12, kasar.</div>
+    ${anyBand ? `
+    <h3 class="mini-h">Zona saat ini: gap ${bandLabel(anyBand)} — yang terjadi dalam 3 bulan berikutnya secara historis</h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Produk</th><th>Naik ≥8%</th><th>Naik (berapa pun)</th><th>Turun</th></tr></thead>
+      <tbody>${lines}</tbody>
+    </table></div>
+    <h3 class="mini-h">Peluang historis kenaikan ≥8% dalam 3 bulan per zona gap Pertalite</h3>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Gap Pertalite</th><th>Pertamax</th><th>Turbo</th><th>n bulan</th></tr></thead>
+      <tbody>${allBands}</tbody>
+    </table></div>` : ""}
+    <div class="footnote">Dari data 2019–2026: 3 dari 4 kenaikan Pertamax ≥8% didahului gap Pertalite ≥50% dalam 3 bulan sebelumnya (pengecualian: Okt 2023, gap 14–31%). Dari bulan-bulan di zona ≥50%, 64% diikuti kenaikan, dibanding 13% untuk semua bulan. Turbo di zona yang sama sering naik maupun turun, karena lebih mengikuti pasar. Indikator ini <b>tidak masuk skor gabungan</b>: saat dicoba sebagai komponen ke-5, hasilnya overfit (gagal di uji leave-one-out). Jendela 3 bulan tumpang tindih dan kejadian mengelompok di 2022 &amp; 2026, jadi baca sebagai indikasi, bukan probabilitas presisi.</div>
   `;
 }
 
@@ -775,6 +819,9 @@ function renderAll(region, resolution) {
   const last92 = ron92Monthly[ron92Monthly.length - 1] ?? null;
   const last98 = ron98Monthly[ron98Monthly.length - 1] ?? null;
 
+  const ron90Monthly = computePertaliteMonthly(data);
+  lastPertaliteRow = ron90Monthly[ron90Monthly.length - 1] ?? null;
+
   const regionLabel = region === "jakarta" ? "DKI Jakarta" : "Sumatera Utara";
   renderScoreCard("card-pertamax", `Pertamax (RON 92) — ${regionLabel}`, last92);
   renderScoreCard("card-turbo", `Pertamax Turbo (RON 98) — ${regionLabel}`, last98);
@@ -786,8 +833,7 @@ function renderAll(region, resolution) {
   renderChart("chart-turbo", ron98Display, "Pertamax Turbo", "#e0524a");
 
   // Pertalite: satu harga nasional -> tidak tergantung tombol wilayah.
-  const ron90Monthly = computePertaliteMonthly(data);
-  renderPertaliteCard(ron90Monthly[ron90Monthly.length - 1] ?? null);
+  renderPertaliteCard(lastPertaliteRow);
   const ron90Display = currentResolution === "bulanan" ? ron90Monthly : getPertaliteTimeline(data, currentResolution);
   renderChart("chart-pertalite", ron90Display, "Pertalite", "#3fb27f");
 

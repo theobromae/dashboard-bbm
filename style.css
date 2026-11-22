@@ -147,3 +147,9 @@ tbody tr:hover{ background:rgba(255,255,255,0.03); }
   .region-switch{ margin-top:10px; }
   .region-btn{ padding:6px 10px; font-size:12px; }
 }
+
+/* Indikator tekanan fiskal Pertalite */
+.components .comp.wide{ grid-column:1/-1; order:9; }
+.muted{ color:var(--muted); font-weight:400; font-size:0.9em; }
+.mini-h{ font-size:0.95rem; margin:16px 0 6px; color:var(--text, #e8ecf5); }
+tr.cur-band td{ background:rgba(62,207,142,0.12); font-weight:600; }
