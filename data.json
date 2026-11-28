@@ -1620,7 +1620,7 @@
       },
       "mogas97_estimated": 111.35,
       "updated_via": "oilpriceapi+frankfurter",
-      "updated_at": "2026-11-27T05:53:52.531Z",
+      "updated_at": "2026-11-28T05:33:43.756Z",
       "mogas92_estimated": 105.69,
       "mogas92_estimated_n": 7
     }
@@ -12887,6 +12887,14 @@
     },
     {
       "date": "2026-11-27",
+      "icp": 91.06,
+      "kurs": 18390,
+      "mogas92_estimated": 105.69,
+      "mogas92_estimated_n": 7,
+      "mogas97_estimated": 111.35
+    },
+    {
+      "date": "2026-11-28",
       "icp": 91.06,
       "kurs": 18390,
       "mogas92_estimated": 105.69,
